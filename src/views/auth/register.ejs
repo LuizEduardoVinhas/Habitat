@@ -1,0 +1,113 @@
+<%- include('../layouts/header', { title: 'Cadastro do aluno' }) %>
+<main id="conteudo" class="min-h-screen grid lg:grid-cols-[1.05fr_1fr] gap-8 lg:gap-16 items-center p-6 lg:p-12 max-w-[1360px] mx-auto">
+  <a href="/" data-history-back class="fixed left-4 top-4 z-20 btn-outline bg-white/95 shadow-sm"><%- icon('arrow-left', 'w-4 h-4') %>Voltar</a>
+
+  <section class="relative overflow-hidden rounded-[28px] bg-nature-botanic min-h-[360px] lg:min-h-[824px] text-white flex flex-col justify-between p-8 lg:p-[52px]" aria-label="Apresentação">
+    <img src="/img/habitat-login.png" alt="" class="absolute inset-0 w-full h-full object-cover" style="object-position: 38% center" onerror="this.remove()">
+    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-black/20" aria-hidden="true"></div>
+    <div class="relative"><%- include('../layouts/logo', { light: true, withSub: false }) %></div>
+    <div class="relative max-w-xl">
+      <p class="text-xs font-semibold uppercase tracking-wide text-nature-amber">Primeiro acesso</p>
+      <h1 class="mt-3 text-4xl lg:text-5xl font-light leading-tight">Um espaço de aprendizagem com a família por perto.</h1>
+      <p class="mt-5 text-base lg:text-lg text-white/90">Cadastre o aluno e o contato do responsável. Essas informações serão associadas às solicitações de aula.</p>
+    </div>
+  </section>
+
+  <section class="w-full max-w-[520px] mx-auto bg-white border border-slate-200 rounded-[28px] shadow-sm p-8" aria-labelledby="register-title">
+    <h2 id="register-title" class="text-3xl font-light">Criar conta de aluno</h2>
+    <p class="mt-2 text-sm text-slate-600">Ao concluir, os dados do aluno e do responsável ficam salvos no Habitat e vinculados às solicitações de aula. O responsável não precisa criar outro login.</p>
+    <form id="registerForm" class="mt-6 space-y-4" novalidate>
+      <div>
+        <label for="full_name" class="label">Nome completo do aluno</label>
+        <input id="full_name" name="full_name" class="input" autocomplete="name" maxlength="255" required>
+      </div>
+      <div>
+        <label for="email" class="label">E-mail do aluno</label>
+        <input id="email" name="email" type="email" class="input" autocomplete="email" maxlength="255" required>
+      </div>
+      <div>
+        <label for="guardian_name" class="label">Nome do responsável</label>
+        <input id="guardian_name" name="guardian_name" class="input" autocomplete="off" maxlength="255" required>
+      </div>
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label for="guardian_phone" class="label">Telefone do responsável</label>
+          <input id="guardian_phone" name="guardian_phone" type="tel" class="input" autocomplete="tel" maxlength="50" required placeholder="(81) 99999-9999">
+        </div>
+        <div>
+          <label for="guardian_relationship" class="label">Vínculo com o aluno</label>
+          <select id="guardian_relationship" name="guardian_relationship" class="input" required>
+            <option value="">Selecione</option>
+            <option value="Mãe">Mãe</option>
+            <option value="Pai">Pai</option>
+            <option value="Responsável legal">Responsável legal</option>
+            <option value="Outro familiar">Outro familiar</option>
+            <option value="Outro">Outro</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label for="password" class="label">Crie uma senha</label>
+        <input id="password" name="password" type="password" class="input" autocomplete="new-password" minlength="8" maxlength="72" required>
+        <p class="mt-1 text-xs text-slate-600">Use pelo menos 8 caracteres.</p>
+      </div>
+      <div>
+        <label for="passwordConfirm" class="label">Confirme a senha</label>
+        <input id="passwordConfirm" name="passwordConfirm" type="password" class="input" autocomplete="new-password" minlength="8" maxlength="72" required>
+      </div>
+      <div id="registerError" role="alert" hidden></div>
+      <button id="registerBtn" type="submit" class="btn-amber w-full"><%- icon('user', 'w-5 h-5') %><span>Criar conta</span></button>
+    </form>
+    <p class="mt-5 text-center text-sm text-slate-600">Já tem cadastro? <a href="/login" class="font-semibold underline">Entrar</a></p>
+  </section>
+</main>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var backLink = document.querySelector('[data-history-back]');
+  backLink.addEventListener('click', function (event) {
+    if (window.history.length > 1) {
+      event.preventDefault();
+      window.history.back();
+    }
+  });
+
+  var form = document.getElementById('registerForm');
+  var error = document.getElementById('registerError');
+  var button = document.getElementById('registerBtn');
+  form.addEventListener('submit', async function (event) {
+    event.preventDefault();
+    ST.alert(error, '');
+    if (form.password.value !== form.passwordConfirm.value) {
+      ST.alert(error, 'As senhas não conferem.');
+      form.passwordConfirm.focus();
+      return;
+    }
+    if (!form.checkValidity()) {
+      ST.alert(error, 'Confira os campos obrigatórios e o formato do e-mail.');
+      form.reportValidity();
+      return;
+    }
+    button.disabled = true;
+    button.querySelector('span').textContent = 'Criando conta…';
+    try {
+      await ST.api('/auth/register', {
+        method: 'POST',
+        json: {
+          full_name: form.full_name.value,
+          email: form.email.value,
+          guardian_name: form.guardian_name.value,
+          guardian_phone: form.guardian_phone.value,
+          guardian_relationship: form.guardian_relationship.value,
+          password: form.password.value
+        }
+      });
+      location.href = '/student/dashboard';
+    } catch (exception) {
+      ST.alert(error, exception.message);
+      button.disabled = false;
+      button.querySelector('span').textContent = 'Criar conta';
+    }
+  });
+});
+</script>
+<%- include('../layouts/end') %>

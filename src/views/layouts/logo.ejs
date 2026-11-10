@@ -1,0 +1,11 @@
+<%
+  const _light = (typeof light !== 'undefined') && light;
+  const _sub = (typeof withSub === 'undefined') ? true : withSub;
+%>
+<a href="/" class="flex items-center gap-3 rounded-xl" aria-label="Habitat — página inicial">
+  <img src="/img/habitat-logo.png" alt="" class="w-11 h-11 shrink-0 rounded-xl object-contain" aria-hidden="true">
+  <span class="leading-tight">
+    <span class="block text-lg font-semibold tracking-wide <%= _light ? 'text-white' : 'text-boutique-text' %>">Habitat</span>
+    <% if (_sub) { %><span class="block text-[10px] tracking-wide uppercase <%= _light ? 'text-white/80' : 'text-slate-600' %>">Ecossistema de ensino</span><% } %>
+  </span>
+</a>

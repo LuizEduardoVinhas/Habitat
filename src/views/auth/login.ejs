@@ -1,0 +1,111 @@
+<%- include('../layouts/header', { title: 'Entrar' }) %>
+<main id="conteudo" class="min-h-screen grid lg:grid-cols-[1.05fr_1fr] gap-8 lg:gap-16 items-center p-6 lg:p-12 max-w-[1360px] mx-auto">
+  <a href="/" data-history-back class="fixed left-4 top-4 z-20 btn-outline bg-white/95 shadow-sm"><%- icon('arrow-left', 'w-4 h-4') %>Voltar</a>
+
+  <section class="relative overflow-hidden rounded-[28px] bg-nature-botanic min-h-[360px] lg:min-h-[824px] text-white flex flex-col justify-between p-8 lg:p-[52px]" aria-label="Apresentação">
+    <img src="/img/habitat-login.png" alt="" class="absolute inset-0 w-full h-full object-cover" style="object-position: 38% center" onerror="this.remove()">
+    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-black/20" aria-hidden="true"></div>
+    <div class="relative"><%- include('../layouts/logo', { light: true, withSub: false }) %></div>
+    <div class="relative max-w-xl">
+      <p class="text-xs font-semibold uppercase tracking-wide text-nature-amber">Seu espaço de aprendizagem</p>
+      <h2 class="mt-3 text-4xl lg:text-5xl font-light leading-tight">Profundidade sem sobrecarga.</h2>
+      <p class="mt-5 text-base lg:text-lg text-white/90">Materiais, aulas e progresso organizados em uma rotina previsível e acolhedora.</p>
+    </div>
+  </section>
+
+  <section class="w-full max-w-[430px] mx-auto bg-white border border-slate-200 rounded-[28px] shadow-sm p-8" aria-labelledby="login-title">
+    <h1 id="login-title" class="text-3xl font-light">Bem-vindo de volta</h1>
+    <p class="mt-2 text-sm text-slate-600">Entre com os dados enviados pela Professora Rhuanna.</p>
+
+    <div role="tablist" aria-label="Tipo de acesso" class="mt-6 grid grid-cols-2 gap-1 p-1 rounded-xl bg-slate-100">
+      <button type="button" role="tab" data-role="STUDENT" aria-selected="true" class="min-h-[44px] rounded-lg text-sm bg-white shadow-sm text-boutique-text">Acesso Aluno</button>
+      <button type="button" role="tab" data-role="TEACHER" aria-selected="false" class="min-h-[44px] rounded-lg text-sm text-slate-600">Área da Professora</button>
+    </div>
+
+    <form id="loginForm" class="mt-6 space-y-5" novalidate>
+      <div>
+        <label for="email" class="label">E-mail</label>
+        <input id="email" name="email" type="email" autocomplete="username" required class="input" placeholder="nome@email.com">
+      </div>
+      <div>
+        <label for="password" class="label">Senha</label>
+        <div class="relative">
+          <input id="password" name="password" type="password" autocomplete="current-password" required class="input pr-12" placeholder="Sua senha">
+          <button type="button" id="togglePw" class="absolute right-0 top-0 h-full w-11 grid place-items-center text-slate-600" aria-label="Mostrar senha" aria-pressed="false"><%- icon('eye', 'w-5 h-5') %></button>
+        </div>
+      </div>
+
+      <div id="loginError" role="alert" hidden></div>
+
+      <button type="submit" id="submitBtn" class="btn-amber w-full"><%- icon('log-in', 'w-5 h-5') %><span>Entrar no Sistema</span></button>
+    </form>
+
+    <div class="hint mt-5 bg-[#E8EDF4] text-boutique-text"><%- icon('lightbulb', 'w-4 h-4 mt-0.5 shrink-0') %><p>Primeiro acesso? <a class="font-semibold underline" href="/cadastro">Cadastre o aluno e seu responsável</a>.</p></div>
+    <p class="mt-5 text-center text-xs text-slate-600">Ambiente protegido • Seus dados de aprendizagem são confidenciais.</p>
+  </section>
+</main>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var backLink = document.querySelector('[data-history-back]');
+  backLink.addEventListener('click', function (event) {
+    if (window.history.length > 1) {
+      event.preventDefault();
+      window.history.back();
+    }
+  });
+
+  var role = 'STUDENT';
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('[data-role]'));
+  var form = document.getElementById('loginForm');
+  var err = document.getElementById('loginError');
+  var btn = document.getElementById('submitBtn');
+  var pw = document.getElementById('password');
+
+  function setRole(r) {
+    role = r;
+    tabs.forEach(function (t) {
+      var on = t.dataset.role === r;
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+      t.classList.toggle('bg-white', on);
+      t.classList.toggle('shadow-sm', on);
+      t.classList.toggle('text-boutique-text', on);
+      t.classList.toggle('text-slate-600', !on);
+    });
+    ST.alert(err, '');
+  }
+  tabs.forEach(function (t) { t.addEventListener('click', function () { setRole(t.dataset.role); }); });
+
+  document.getElementById('togglePw').addEventListener('click', function () {
+    var show = pw.type === 'password';
+    pw.type = show ? 'text' : 'password';
+    this.setAttribute('aria-pressed', show ? 'true' : 'false');
+    this.setAttribute('aria-label', show ? 'Ocultar senha' : 'Mostrar senha');
+  });
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    ST.alert(err, '');
+    var email = form.email.value.trim();
+    var password = pw.value;
+    if (!email || !password) { ST.alert(err, 'Preencha o e-mail e a senha para entrar.'); return; }
+    btn.disabled = true;
+    btn.querySelector('span').textContent = 'Entrando…';
+    try {
+      var data = await ST.api('/auth/login', { method: 'POST', json: { email: email, password: password } });
+      if (data.user.role !== role) {
+        await ST.api('/auth/logout', { method: 'DELETE' }).catch(function () {});
+        throw new Error(role === 'TEACHER'
+          ? 'Esta conta é de aluno. Use a aba "Acesso Aluno".'
+          : 'Esta conta é da professora. Use a aba "Área da Professora".');
+      }
+      location.href = data.user.role === 'TEACHER' ? '/admin/dashboard' : '/student/dashboard';
+    } catch (ex) {
+      ST.alert(err, ex.message);
+      btn.disabled = false;
+      btn.querySelector('span').textContent = 'Entrar no Sistema';
+    }
+  });
+});
+</script>
+<%- include('../layouts/end', { showCleanReadingExit: false }) %>

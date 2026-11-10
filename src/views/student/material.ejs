@@ -1,0 +1,104 @@
+<%- include('../layouts/header', { title: material.title }) %>
+<%
+  const _t = material.area ? areaTheme(material.area.code) : areaTheme('');
+  const _paras = String(material.description || '').split(/\n{2,}/).map(function (p) { return p.trim(); }).filter(Boolean);
+  const _words = String(material.description || '').split(/\s+/).filter(Boolean).length;
+  const _read = Math.max(1, Math.round(_words / 180));
+%>
+<div class="lg:flex">
+  <%- include('../layouts/sidebar', { active: 'materials' }) %>
+  <div class="flex-1 min-w-0">
+    <%- include('../layouts/topbar', { heading: 'Material de estudo', sub: material.area ? material.area.name : '' }) %>
+
+    <main id="conteudo" class="p-6 lg:p-8">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <a href="/student/dashboard" class="inline-flex items-center gap-2 min-h-[44px] text-sm font-semibold"><%- icon('arrow-left', 'w-4 h-4') %>Voltar ao Dashboard</a>
+        <div class="flex flex-wrap items-center gap-2" data-decor>
+          <button type="button" class="btn-outline" data-clean-toggle role="switch" aria-checked="false"><%- icon('scan', 'w-5 h-5') %>Leitura limpa: <span data-clean-label>desativada</span></button>
+          <button type="button" id="focusBtn" class="btn-outline"><%- icon('timer', 'w-5 h-5') %><span>Foco 15 min</span></button>
+          <div class="inline-flex" role="group" aria-label="Tamanho do texto">
+            <button type="button" id="fsDown" class="btn-outline rounded-r-none" aria-label="Diminuir texto">A−</button>
+            <button type="button" id="fsUp" class="btn-outline rounded-l-none border-l-0" aria-label="Aumentar texto">A+</button>
+          </div>
+        </div>
+      </div>
+      <p id="focusMsg" class="mt-3 text-sm text-nature-botanic font-medium min-h-[1.25rem]" role="status"></p>
+
+      <div class="mt-2 grid xl:grid-cols-[1fr_320px] gap-6 items-start">
+        <article class="card p-6 lg:p-8 min-w-0">
+          <div class="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600">
+            <span class="badge <%= _t.soft %> <%= _t.text %>"><%- icon(_t.icon, 'w-3.5 h-3.5') %><%= material.area ? material.area.name : 'Material' %></span>
+            <span><%= _paras.length ? _read + ' min de leitura • ' : '' %>Publicado em <%= fmtDayYear(material.createdAt) %></span>
+          </div>
+          <h2 class="mt-6 text-3xl lg:text-4xl font-semibold leading-tight"><%= material.title %></h2>
+
+          <% if (_paras.length) { %>
+            <div id="prose" class="mt-6 space-y-4 text-lg leading-8 max-w-[70ch]">
+              <% _paras.forEach(function (p) { %><p class="whitespace-pre-line"><%= p %></p><% }) %>
+            </div>
+          <% } %>
+
+          <h3 class="mt-10 text-xl font-semibold <%= _t.text %>">Material completo</h3>
+          <object data="<%= material.file_url %>" type="application/pdf" class="mt-4 w-full h-[70vh] rounded-xl border border-slate-200 bg-slate-50" aria-label="PDF: <%= material.title %>">
+            <p class="p-6 text-sm">Seu navegador não mostra PDFs aqui. <a class="underline font-semibold" href="<%= material.file_url %>" download>Baixe o arquivo</a> para ler.</p>
+          </object>
+
+          <section class="mt-8 rounded-xl bg-[#E8EDF4] p-6" aria-labelledby="pausa-t" data-decor>
+            <p id="pausa-t" class="text-xs font-bold text-languages-navy flex items-center gap-2"><%- icon('brain', 'w-4 h-4') %>Pausa ativa</p>
+            <label for="pausa" class="mt-3 block text-base font-semibold">Em uma frase: o que você entendeu até aqui?</label>
+            <textarea id="pausa" rows="2" class="input mt-3" placeholder="Escreva do seu jeito — esta anotação fica só na tela."></textarea>
+          </section>
+        </article>
+
+        <aside class="space-y-6" data-decor>
+          <section class="card" aria-labelledby="ori-t">
+            <h2 id="ori-t" class="text-lg font-semibold">Orientações</h2>
+            <ul class="mt-4 space-y-3 text-sm">
+              <li class="flex gap-3"><span class="text-nature-amber"><%- icon('check', 'w-4 h-4') %></span>Leia apenas uma seção por vez.</li>
+              <li class="flex gap-3"><span class="text-nature-amber"><%- icon('check', 'w-4 h-4') %></span>Anote uma dúvida, não todas.</li>
+              <li class="flex gap-3"><span class="text-nature-amber"><%- icon('check', 'w-4 h-4') %></span>Faça uma pausa quando o foco cair.</li>
+            </ul>
+            <p class="hint mt-4 bg-[#E8F0EB]"><%- icon('lightbulb', 'w-4 h-4 mt-0.5 shrink-0 text-nature-botanic') %>Se o foco cair, marque onde parou. Retomar também é progresso.</p>
+          </section>
+          <a href="<%= material.file_url %>" download class="btn-outline w-full"><%- icon('download', 'w-5 h-5') %>Baixar PDF original</a>
+          <section class="card p-5" aria-labelledby="atalhos-t">
+            <h2 id="atalhos-t" class="text-sm font-semibold">Atalhos de leitura</h2>
+            <ul class="mt-3 space-y-1.5 text-xs text-slate-600">
+              <li>Espaço — iniciar ou pausar o foco</li>
+              <li>Esc — alternar modo limpo</li>
+              <li>Ctrl + + — aumentar texto</li>
+            </ul>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var btn = document.getElementById('focusBtn'), label = btn.querySelector('span'), msg = document.getElementById('focusMsg');
+  var t = ST.makeTimer(15 * 60, function (s) {
+    label.textContent = t.running ? 'Foco ' + ST.mmss(s) : (s < 15 * 60 ? 'Continuar ' + ST.mmss(s) : 'Foco 15 min');
+  }, function () { msg.textContent = 'Foco concluído. Respire e faça uma pausa curta.'; });
+  btn.addEventListener('click', function () { msg.textContent = ''; t.toggle(); });
+
+  var sizes = ['text-base', 'text-lg', 'text-xl', 'text-2xl'], i = 1, prose = document.getElementById('prose');
+  try { i = Math.min(3, Math.max(0, +localStorage.getItem('st-fs') || 1)); } catch (_) {}
+  function apply() {
+    if (prose) { sizes.forEach(function (c) { prose.classList.remove(c); }); prose.classList.add(sizes[i]); }
+    try { localStorage.setItem('st-fs', i); } catch (_) {}
+  }
+  document.getElementById('fsUp').addEventListener('click', function () { i = Math.min(3, i + 1); apply(); });
+  document.getElementById('fsDown').addEventListener('click', function () { i = Math.max(0, i - 1); apply(); });
+  apply();
+
+  document.addEventListener('keydown', function (e) {
+    var tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || tag === 'button' || tag === 'a') return;
+    if (e.key === ' ') { e.preventDefault(); t.toggle(); }
+    if (e.key === 'Escape') ST.setClean(!document.body.classList.contains('clean-reading'));
+  });
+});
+</script>
+<%- include('../layouts/end') %>

@@ -1,0 +1,242 @@
+<%- include('../layouts/header', { title: 'Agendamentos' }) %>
+<%
+  const _tabs = [
+    { k: 'ALL', label: 'Todos', box: 'bg-slate-200 text-slate-700', on: 'border-slate-500 bg-slate-50' },
+    { k: 'PENDING', label: 'PENDING', box: 'bg-[#F6EFD9] text-[#7A5C10]', on: 'border-nature-amber bg-[#F6EFD9]' },
+    { k: 'CONFIRMED', label: 'CONFIRMED', box: 'bg-[#E1EDE6] text-nature-botanic', on: 'border-nature-botanic bg-[#E8F0EB]' },
+    { k: 'CANCELLED', label: 'CANCELLED', box: 'bg-[#F6E1E1] text-[#9B2C2C]', on: 'border-[#C0392B] bg-[#FBEDEC]' }
+  ];
+%>
+<div class="lg:flex">
+  <%- include('../layouts/sidebar', { active: 'appointments' }) %>
+  <div class="flex-1 min-w-0">
+    <%- include('../layouts/topbar', { heading: 'Agendamentos', sub: 'Gerencie solicitações, confirmações e cancelamentos' }) %>
+
+    <main id="conteudo" class="p-6 lg:p-8 space-y-6">
+      <div role="tablist" aria-label="Filtrar por status" class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <% _tabs.forEach(function (t, idx) { %>
+          <button type="button" role="tab" data-tab="<%= t.k %>" data-on="<%= t.on %>" aria-selected="<%= t.k === 'PENDING' ? 'true' : 'false' %>"
+            class="tab min-h-[56px] rounded-2xl border-2 border-slate-200 bg-white px-4 py-3 flex items-center justify-between text-left">
+            <span class="text-xs font-bold"><%= t.label %></span>
+            <span class="px-2.5 py-1 rounded-full text-xs font-semibold <%= t.box %>"><%= counts[t.k] || 0 %></span>
+          </button>
+        <% }) %>
+      </div>
+
+      <div id="actionError" role="alert" hidden></div>
+
+      <section class="card" aria-labelledby="lista-t">
+        <h2 id="lista-t" class="sr-only">Lista de agendamentos</h2>
+        <div class="grid md:grid-cols-[1.4fr_1fr] gap-4">
+          <div><label for="q" class="label">Buscar aluno</label><input id="q" type="search" class="input" placeholder="Nome ou telefone"></div>
+          <div>
+            <label for="areaFilter" class="label">Área</label>
+            <select id="areaFilter" class="input"><option value="">Todas as áreas</option><% subjectAreas.forEach(function (a) { %><option value="<%= a.code %>"><%= a.name %></option><% }) %></select>
+          </div>
+        </div>
+        <p id="count" class="mt-4 text-xs text-slate-600" aria-live="polite"></p>
+
+        <div class="mt-3 overflow-x-auto">
+          <table class="w-full min-w-[820px] text-sm">
+            <thead class="bg-slate-50"><tr><th scope="col" class="th">Aluno</th><th scope="col" class="th">Solicitado para</th><th scope="col" class="th">Área</th><th scope="col" class="th">Inclusão</th><th scope="col" class="th">Status</th><th scope="col" class="th">Ações</th></tr></thead>
+            <tbody id="rows">
+              <% appointments.forEach(function (a) { const t = areaTheme(a.areaCode); const s = statusTheme(a.status); %>
+                <tr class="row border-b border-slate-100 align-top" data-status="<%= a.status %>" data-area="<%= a.areaCode %>" data-search="<%= (a.name + ' ' + a.phone + ' ' + a.guardian).toLowerCase() %>">
+                  <td class="px-3 py-4">
+                    <p class="font-semibold"><%= a.name %></p>
+                    <p class="text-xs text-slate-600"><%= a.phone || '—' %></p>
+                    <% if (a.guardian) { %><p class="mt-1 text-xs text-slate-600">Responsável: <%= a.guardian %></p><% } %>
+                  </td>
+                  <td class="px-3 py-4 whitespace-nowrap"><%= fmtDay(a.start) %> • <%= fmtTime(a.start) %></td>
+                  <td class="px-3 py-4 font-semibold <%= t.text %>"><%= a.areaName %></td>
+                  <td class="px-3 py-4">
+                    <div class="flex flex-wrap gap-1.5">
+                      <% a.tags.forEach(function (g) { %><span class="badge bg-[#E8EDF4] text-languages-navy"><%= g %></span><% }) %>
+                      <% if (!a.tags.length) { %><span class="text-xs text-slate-600">—</span><% } %>
+                    </div>
+                    <% if (a.observations) { %>
+                      <button type="button" class="obs-toggle mt-2 inline-flex items-center gap-1 min-h-[44px] text-xs font-semibold underline" aria-expanded="false" aria-controls="obs-<%= a.id %>">Ver observações</button>
+                    <% } %>
+                  </td>
+                  <td class="px-3 py-4"><span class="badge <%= s.cls %>"><%= s.label %></span></td>
+                  <td class="px-3 py-4">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <% if (a.status === 'PENDING') { %>
+                        <button type="button" class="btn-outline approve" data-open-modal="approveModal" id="ap-<%= a.id %>"
+                          data-id="<%= a.id %>" data-name="<%= a.name %>" data-area="<%= a.areaName %>" data-date="<%= fmtDayYear(a.start) %>"
+                          data-time="<%= fmtTime(a.start) %> — <%= fmtTime(a.end) %>" data-phone="<%= a.phoneDigits %>" data-day="<%= fmtDay(a.start) %>" data-start="<%= fmtTime(a.start) %>">Aprovar</button>
+                        <button type="button" class="btn-icon rounded-lg" data-cancel="<%= a.id %>" aria-label="Recusar aula de <%= a.name %>"><%- icon('x', 'w-5 h-5') %></button>
+                      <% } else if (a.status === 'CONFIRMED') { %>
+                        <button type="button" class="btn-danger" data-cancel="<%= a.id %>" aria-label="Cancelar aula de <%= a.name %>">Cancelar</button>
+                      <% } else { %><span class="text-xs text-slate-600">—</span><% } %>
+                    </div>
+                  </td>
+                </tr>
+                <% if (a.observations) { %>
+                  <tr id="obs-<%= a.id %>" class="obs-row" hidden data-for-status="<%= a.status %>">
+                    <td colspan="6" class="px-3 pb-4">
+                      <div class="rounded-xl bg-[#E8EDF4] p-4 flex gap-3">
+                        <span class="text-languages-navy"><%- icon('brain', 'w-5 h-5') %></span>
+                        <div><p class="text-xs font-bold">Observações de Inclusão / TDAH / Autismo</p><p class="mt-1 text-sm"><%= a.observations %></p></div>
+                      </div>
+                    </td>
+                  </tr>
+                <% } %>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+        <p id="empty" hidden class="mt-6 rounded-xl bg-slate-50 p-6 text-center text-sm text-slate-600">Nenhum agendamento encontrado com esses filtros.</p>
+
+        <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+          <p id="range" class="text-xs text-slate-600"></p>
+          <div class="flex items-center gap-1" id="pager" aria-label="Paginação"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<!-- Modal: aprovar -->
+<div id="approveModal" data-backdrop hidden class="fixed inset-0 z-40 bg-slate-900/50 grid place-items-center p-4 overflow-y-auto">
+  <div role="dialog" aria-modal="true" aria-labelledby="ap-title" class="w-full max-w-[440px] bg-white rounded-3xl shadow-xl p-6">
+    <div class="flex items-start justify-between">
+      <span class="grid place-items-center w-11 h-11 rounded-xl bg-[#E1EDE6] text-nature-botanic"><%- icon('calendar-check', 'w-5 h-5') %></span>
+      <button type="button" data-close-modal class="btn-icon" aria-label="Fechar"><%- icon('x', 'w-5 h-5') %></button>
+    </div>
+    <h2 id="ap-title" class="mt-4 text-2xl font-light">Aprovar aula de <span id="mName"></span>?</h2>
+    <p class="mt-1 text-sm text-slate-600">Confirme os dados antes de reservar o horário.</p>
+    <dl class="mt-5 rounded-xl bg-slate-50 p-4 space-y-2 text-sm">
+      <div class="flex justify-between"><dt class="text-slate-600">Área</dt><dd id="mArea" class="font-semibold"></dd></div>
+      <div class="flex justify-between"><dt class="text-slate-600">Data</dt><dd id="mDate" class="font-semibold"></dd></div>
+      <div class="flex justify-between"><dt class="text-slate-600">Horário</dt><dd id="mTime" class="font-semibold"></dd></div>
+    </dl>
+    <label for="mMsg" class="label mt-5">Mensagem opcional</label>
+    <textarea id="mMsg" rows="3" class="input"></textarea>
+    <p class="hint mt-4 bg-[#E8F0EB]"><%- icon('lightbulb', 'w-4 h-4 mt-0.5 shrink-0 text-nature-botanic') %><span id="mHint">Depois de aprovar, abriremos o WhatsApp com esta mensagem pronta para enviar.</span></p>
+    <div id="mError" role="alert" hidden class="mt-4"></div>
+    <div class="mt-5 grid grid-cols-2 gap-3">
+      <button type="button" data-close-modal class="btn-outline">Cancelar</button>
+      <button type="button" id="mOk" class="btn-amber"><%- icon('send', 'w-4 h-4') %><span>Aprovar e enviar</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: recusar/cancelar -->
+<div id="cancelModal" data-backdrop hidden class="fixed inset-0 z-40 bg-slate-900/50 grid place-items-center p-4">
+  <div role="dialog" aria-modal="true" aria-labelledby="cn-title" class="w-full max-w-[400px] bg-white rounded-3xl shadow-xl p-6">
+    <h2 id="cn-title" class="text-xl font-semibold">Cancelar este agendamento?</h2>
+    <p class="mt-2 text-sm text-slate-600">O status mudará para CANCELLED e o horário será liberado. Avise a família pelo WhatsApp se necessário.</p>
+    <div id="cError" role="alert" hidden class="mt-4"></div>
+    <div class="mt-5 grid grid-cols-2 gap-3">
+      <button type="button" data-close-modal class="btn-outline">Manter agendamento</button>
+      <button type="button" id="cOk" class="btn-danger">Sim, cancelar aula</button>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var PER = 8, page = 1, tab = 'PENDING';
+  var rows = Array.prototype.slice.call(document.querySelectorAll('tr.row'));
+  var $ = function (id) { return document.getElementById(id); };
+
+  function matching() {
+    var q = $('q').value.trim().toLowerCase(), area = $('areaFilter').value;
+    return rows.filter(function (r) {
+      return (tab === 'ALL' || r.dataset.status === tab) && (!area || r.dataset.area === area) && (!q || r.dataset.search.indexOf(q) >= 0);
+    });
+  }
+  function render() {
+    var list = matching(), pages = Math.max(1, Math.ceil(list.length / PER));
+    page = Math.min(page, pages);
+    var from = (page - 1) * PER, shown = list.slice(from, from + PER);
+    rows.forEach(function (r) {
+      var on = shown.indexOf(r) >= 0;
+      r.hidden = !on;
+      var obs = r.nextElementSibling && r.nextElementSibling.classList.contains('obs-row') ? r.nextElementSibling : null;
+      if (obs) { var open = r.querySelector('.obs-toggle').getAttribute('aria-expanded') === 'true'; obs.hidden = !(on && open); }
+    });
+    $('empty').hidden = list.length > 0;
+    $('count').textContent = 'Exibindo ' + list.length + (list.length === 1 ? ' agendamento' : ' agendamentos') + (tab === 'ALL' ? '' : ' • ' + tab);
+    $('range').textContent = list.length ? (from + 1) + '–' + (from + shown.length) + ' de ' + list.length + ' resultados' : '';
+    var pager = $('pager'); pager.innerHTML = '';
+    if (pages > 1) for (var p = 1; p <= pages; p++) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.textContent = p;
+      b.className = 'min-h-[44px] min-w-[44px] rounded-lg border text-xs font-semibold ' + (p === page ? 'bg-nature-botanic border-nature-botanic text-white' : 'bg-white border-slate-200');
+      b.setAttribute('aria-label', 'Página ' + p); if (p === page) b.setAttribute('aria-current', 'page');
+      (function (n) { b.addEventListener('click', function () { page = n; render(); }); })(p);
+      pager.appendChild(b);
+    }
+  }
+  function setTab(k) {
+    tab = k; page = 1;
+    document.querySelectorAll('.tab').forEach(function (t) {
+      var on = t.dataset.tab === k;
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+      t.dataset.on.split(' ').forEach(function (c) { t.classList.toggle(c, on); });
+      t.classList.toggle('border-slate-200', !on);
+      t.classList.toggle('bg-white', !on);
+    });
+    render();
+  }
+  document.querySelectorAll('.tab').forEach(function (t) { t.addEventListener('click', function () { setTab(t.dataset.tab); }); });
+  $('q').addEventListener('input', function () { page = 1; render(); });
+  $('areaFilter').addEventListener('change', function () { page = 1; render(); });
+  document.querySelectorAll('.obs-toggle').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var open = b.getAttribute('aria-expanded') !== 'true';
+      b.setAttribute('aria-expanded', open ? 'true' : 'false'); b.textContent = open ? 'Ocultar observações' : 'Ver observações';
+      document.getElementById(b.getAttribute('aria-controls')).hidden = !open;
+    });
+  });
+
+  /* aprovar */
+  var cur = null;
+  document.querySelectorAll('.approve').forEach(function (b) {
+    b.addEventListener('click', function () {
+      cur = b.dataset;
+      $('mName').textContent = cur.name; $('mArea').textContent = cur.area; $('mDate').textContent = cur.date; $('mTime').textContent = cur.time;
+      $('mMsg').value = 'Olá, ' + cur.name.split(' ')[0] + '! Sua aula avaliativa de ' + cur.area + ' está confirmada para ' + cur.day + ' às ' + cur.start + '. Até breve!';
+      $('mHint').textContent = cur.phone ? 'Depois de aprovar, abriremos o WhatsApp com esta mensagem pronta para enviar.' : 'Sem telefone cadastrado: a aula será confirmada, mas você precisará avisar a família por outro canal.';
+      ST.alert($('mError'), '');
+    });
+  });
+  $('mOk').addEventListener('click', async function () {
+    var btn = this, digits = cur.phone, w = null;
+    if (digits) w = window.open('about:blank', '_blank');
+    btn.disabled = true;
+    try {
+      await ST.api('/admin/appointments/' + cur.id + '/status', { method: 'PATCH', json: { status: 'CONFIRMED' } });
+      if (w) { var n = digits.length <= 11 ? '55' + digits : digits; w.location = 'https://wa.me/' + n + '?text=' + encodeURIComponent($('mMsg').value); }
+      location.reload();
+    } catch (ex) { if (w) w.close(); ST.alert($('mError'), ex.message); btn.disabled = false; }
+  });
+
+  /* cancelar / recusar */
+  var cancelId = null;
+  document.querySelectorAll('[data-cancel]').forEach(function (b) {
+    b.addEventListener('click', function () { cancelId = b.dataset.cancel; ST.alert($('cError'), ''); ST.openModal('cancelModal'); });
+  });
+  $('cOk').addEventListener('click', async function () {
+    if (!cancelId) {
+      ST.alert($('cError'), 'Selecione um agendamento antes de confirmar o cancelamento.');
+      return;
+    }
+    this.disabled = true;
+    try { await ST.api('/admin/appointments/' + cancelId + '/status', { method: 'PATCH', json: { status: 'CANCELLED' } }); location.reload(); }
+    catch (ex) {
+      if (ex.status === 404) {
+        location.reload();
+        return;
+      }
+      ST.alert($('cError'), ex.message);
+      this.disabled = false;
+    }
+  });
+
+  setTab('PENDING');
+});
+</script>
+<%- include('../layouts/end') %>

@@ -1,0 +1,23 @@
+<footer class="bg-[#173D32] text-white mt-0">
+  <div class="max-w-[1240px] mx-auto px-6 py-10">
+    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-8">
+      <div>
+        <%- include('logo', { light: true, withSub: false }) %>
+        <p class="mt-3 text-sm text-slate-300">Recife/Olinda - PE • atendimento presencial e online</p>
+        <p class="mt-1 text-sm text-slate-300">Prof.ª Rhuanna Luna • Pesquisadora UFPE/UFRPE</p>
+      </div>
+      <nav aria-label="Rodapé" class="flex flex-wrap gap-x-8 gap-y-2 text-sm text-slate-200">
+        <a href="<%= site.whatsappUrl %>" target="_blank" rel="noopener" class="min-h-[44px] inline-flex items-center hover:text-white">WhatsApp</a>
+        <a href="mailto:<%= site.email %>" class="min-h-[44px] inline-flex items-center hover:text-white">E-mail</a>
+        <a href="/#pesquisa" class="min-h-[44px] inline-flex items-center hover:text-white">Pesquisa UFPE</a>
+        <a href="/login" class="min-h-[44px] inline-flex items-center hover:text-white">Área do Aluno</a>
+      </nav>
+    </div>
+    <div class="mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row justify-between gap-2 text-xs text-slate-300">
+      <p>© <%= new Date().getFullYear() %> Habitat. Educação baseada em evidências.</p>
+      <p>Feito com ciência, escuta e cuidado.</p>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

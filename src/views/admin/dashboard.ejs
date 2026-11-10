@@ -1,0 +1,138 @@
+<%- include('../layouts/header', { title: 'Visão geral' }) %>
+<%
+  const _newBlock = '<a href="/admin/research-blocks" class="btn-outline">' + icon('plus', 'w-5 h-5') + 'Novo bloqueio UFPE</a>';
+  const _maxArea = Math.max(1, ...byArea.map(function (a) { return a.count; }));
+  const _maxDay = Math.max(1, ...byDay.map(function (d) { return d.count; }));
+  const _topDay = byDay.reduce(function (best, d) { return d.count > best.count ? d : best; }, byDay[0]);
+  const _kpis = [
+    { label: 'Solicitações Pendentes', value: kpis.pending, sub: 'aguardando sua decisão', subCls: 'text-[#7A5C10]', icon: 'clock', box: 'bg-[#F6EFD9] text-[#8A6A14]' },
+    { label: 'Aulas Confirmadas na Semana', value: kpis.confirmedWeek, sub: 'nos próximos 7 dias', subCls: 'text-nature-botanic', icon: 'circle-check', box: 'bg-[#E1EDE6] text-nature-botanic' },
+    { label: 'Alunos Ativos', value: kpis.students, sub: 'contas de aluno', subCls: 'text-nature-botanic', icon: 'users', box: 'bg-[#E8EDF4] text-languages-navy' },
+    { label: 'Bloqueios de Pesquisa Ativos', value: kpis.activeBlocks, sub: kpis.nextBlock ? 'Próximo: ' + fmtDay(kpis.nextBlock) : 'Nenhum agendado', subCls: 'text-humanities-terracotta', icon: 'flask', box: 'bg-[#F6EAE4] text-humanities-terracotta' }
+  ];
+%>
+<div class="lg:flex">
+  <%- include('../layouts/sidebar', { active: 'home' }) %>
+  <div class="flex-1 min-w-0">
+    <%- include('../layouts/topbar', { heading: 'Visão geral', sub: fmtLong(new Date()), actions: _newBlock }) %>
+
+    <main id="conteudo" class="p-6 lg:p-8 space-y-6">
+      <div id="actionError" role="alert" hidden></div>
+
+      <section aria-label="Indicadores" class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <% _kpis.forEach(function (k) { %>
+          <div class="card p-5">
+            <div class="flex items-start justify-between gap-3"><p class="text-sm text-slate-600"><%= k.label %></p><span class="grid place-items-center w-10 h-10 rounded-lg <%= k.box %>"><%- icon(k.icon, 'w-5 h-5') %></span></div>
+            <p class="mt-3 text-4xl font-semibold"><%= k.value %></p>
+            <p class="mt-2 text-xs font-semibold <%= k.subCls %>"><%= k.sub %></p>
+          </div>
+        <% }) %>
+      </section>
+
+      <% if (kpis.overdue > 0) { %>
+        <p class="hint bg-[#F6EFD9] text-boutique-text" role="status"><%- icon('lightbulb', 'w-4 h-4 mt-0.5 shrink-0 text-[#8A6A14]') %>Atenção: existem <%= kpis.overdue %> <%= kpis.overdue === 1 ? 'solicitação pendente há' : 'solicitações pendentes há' %> mais de 24 horas. Revise primeiro as adaptações de inclusão.</p>
+      <% } %>
+
+      <div class="grid xl:grid-cols-[1fr_270px] gap-6 items-start">
+        <section class="card min-w-0" aria-labelledby="prox-t">
+          <div class="flex items-start justify-between gap-3">
+            <div><h2 id="prox-t" class="text-xl font-semibold">Próximos agendamentos</h2><p class="text-xs text-slate-600 mt-1">Solicitações aguardando sua decisão</p></div>
+            <a href="/admin/appointments" class="inline-flex items-center min-h-[44px] text-xs font-semibold underline">Ver todos</a>
+          </div>
+          <% if (upcoming.length) { %>
+            <div class="mt-4 overflow-x-auto">
+              <table class="w-full min-w-[640px] text-sm">
+                <thead class="bg-slate-50"><tr><th scope="col" class="th">Aluno</th><th scope="col" class="th">Data</th><th scope="col" class="th">Disciplina</th><th scope="col" class="th">Necessidade</th><th scope="col" class="th">Status</th><th scope="col" class="th">Ações</th></tr></thead>
+                <tbody>
+                  <% upcoming.forEach(function (a) { const t = areaTheme(a.areaCode); const s = statusTheme(a.status); %>
+                    <tr class="border-b border-slate-100">
+                      <td class="px-3 py-4 font-semibold"><%= a.name %></td>
+                      <td class="px-3 py-4 whitespace-nowrap"><%= fmtDay(a.start) %> • <%= fmtTime(a.start) %></td>
+                      <td class="px-3 py-4 font-medium <%= t.text %>"><%= a.areaName %></td>
+                      <td class="px-3 py-4 text-xs text-slate-600"><%= a.tags.length ? a.tags.join(' • ') : '—' %></td>
+                      <td class="px-3 py-4"><span class="badge <%= s.cls %>"><%= s.label %></span></td>
+                      <td class="px-3 py-4">
+                        <div class="flex items-center gap-2">
+                          <button type="button" class="btn-icon rounded-lg bg-[#E1EDE6] border-transparent text-nature-botanic" data-act="CONFIRMED" data-id="<%= a.id %>" aria-label="Aprovar aula de <%= a.name %>"><%- icon('check', 'w-5 h-5') %></button>
+                          <button type="button" class="btn-icon rounded-lg bg-[#F6E1E1] border-transparent text-[#9B2C2C]" data-act="CANCELLED" data-id="<%= a.id %>" aria-label="Recusar aula de <%= a.name %>"><%- icon('x', 'w-5 h-5') %></button>
+                          <a href="/admin/appointments" class="text-xs font-semibold underline inline-flex items-center min-h-[44px]">Detalhes</a>
+                        </div>
+                      </td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <p class="mt-6 rounded-xl bg-slate-50 p-6 text-center text-sm text-slate-600">Nenhuma solicitação pendente. Tudo em dia!</p>
+          <% } %>
+        </section>
+
+        <div class="space-y-4">
+          <section class="card" aria-labelledby="hoje-t">
+            <div class="flex items-center justify-between"><h2 id="hoje-t" class="text-xl font-semibold">Hoje</h2><span class="badge bg-[#E1EDE6] text-nature-botanic"><%= today.filter(function (i) { return i.kind === 'class'; }).length %> aulas</span></div>
+            <% if (today.length) { %>
+              <ul class="mt-4 space-y-4">
+                <% today.forEach(function (i) { %>
+                  <li class="flex items-stretch gap-3 text-sm">
+                    <span class="w-11 shrink-0 pt-0.5 text-xs <%= i.kind === 'block' ? 'text-humanities-terracotta' : 'text-slate-600' %>"><%= i.time %></span>
+                    <span class="w-1 rounded-full <%= i.kind === 'block' ? 'bg-humanities-terracotta' : 'bg-nature-botanic' %>" aria-hidden="true"></span>
+                    <span class="text-xs"><%= i.label %></span>
+                  </li>
+                <% }) %>
+              </ul>
+            <% } else { %><p class="mt-4 text-sm text-slate-600">Nada marcado para hoje.</p><% } %>
+          </section>
+          <% const _tb = today.filter(function (i) { return i.kind === 'block'; })[0]; if (_tb) { %>
+            <p class="hint bg-[#F6EAE4] text-boutique-text"><%- icon('lightbulb', 'w-4 h-4 mt-0.5 shrink-0 text-humanities-terracotta') %>Bloqueio de hoje a partir das <%= _tb.time %>: <%= _tb.label %>.</p>
+          <% } %>
+        </div>
+      </div>
+
+      <div class="grid xl:grid-cols-[1fr_1.15fr] gap-6">
+        <section class="card" aria-labelledby="mat-t">
+          <div class="flex items-center justify-between gap-3"><h2 id="mat-t" class="text-xl font-semibold">Solicitações por área</h2><span class="badge bg-slate-100 text-slate-700">Últimos 30 dias</span></div>
+          <ul class="mt-6 space-y-4">
+            <% byArea.forEach(function (a) { const t = areaTheme(a.code); %>
+              <li class="grid grid-cols-[130px_1fr_28px] items-center gap-3 text-xs">
+                <span class="truncate"><%= a.name %></span>
+                <span class="h-2.5 rounded-full bg-slate-100 overflow-hidden"><span class="block h-full rounded-full <%= t.bar %>" style="width: <%= Math.round(a.count / _maxArea * 100) %>%"></span></span>
+                <span class="text-right font-semibold"><%= a.count %></span>
+              </li>
+            <% }) %>
+          </ul>
+        </section>
+
+        <section class="card" aria-labelledby="dias-t">
+          <div class="flex items-center justify-between gap-3"><h2 id="dias-t" class="text-xl font-semibold">Dias mais procurados</h2><span class="badge bg-[#1A202C] text-white"><%- icon('info', 'w-3.5 h-3.5') %>Base: <%= base %> <%= base === 1 ? 'pedido' : 'pedidos' %></span></div>
+          <div class="mt-6 flex items-end justify-between gap-3 h-[170px]" role="img" aria-label="Solicitações por dia da semana: <%= byDay.map(function (d) { return d.label + ' ' + d.count; }).join(', ') %>">
+            <% byDay.forEach(function (d) { const top = d.count > 0 && d === _topDay; %>
+              <div class="flex-1 h-full flex flex-col justify-end items-center gap-1">
+                <span class="text-[11px] font-semibold"><%= d.count %></span>
+                <span class="w-full rounded-t-md <%= top ? 'bg-nature-amber' : 'bg-slate-200' %>" style="height: <%= Math.max(4, Math.round(d.count / _maxDay * 100)) %>%"></span>
+                <span class="text-[11px] text-slate-600"><%= d.label %></span>
+              </div>
+            <% }) %>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var err = document.getElementById('actionError');
+  document.querySelectorAll('[data-act]').forEach(function (b) {
+    b.addEventListener('click', async function () {
+      if (b.dataset.act === 'CANCELLED' && !confirm('Recusar esta solicitação?')) return;
+      b.disabled = true;
+      try {
+        await ST.api('/admin/appointments/' + b.dataset.id + '/status', { method: 'PATCH', json: { status: b.dataset.act } });
+        location.reload();
+      } catch (ex) { ST.alert(err, ex.message); b.disabled = false; window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    });
+  });
+});
+</script>
+<%- include('../layouts/end') %>

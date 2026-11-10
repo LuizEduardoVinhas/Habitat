@@ -1,0 +1,19 @@
+<%
+  const _pageTitle = (typeof title !== 'undefined' && title) ? title + ' | Habitat' : 'Habitat — Ecossistema de ensino';
+  const _bodyClass = (typeof bodyClass !== 'undefined' && bodyClass) ? bodyClass : '';
+%>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= _pageTitle %></title>
+  <meta name="description" content="Habitat — ecossistema de ensino com aulas acolhedoras, aprendizagem investigativa e acompanhamento individual com a Prof.ª Rhuanna Luna.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lexend:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/output.css">
+  <script src="/js/app.js"></script>
+</head>
+<body class="min-h-screen bg-boutique-bg text-boutique-text <%= _bodyClass %>">
+  <a href="#conteudo" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:bg-white focus:px-4 focus:py-3 focus:rounded-xl focus:shadow-lg">Pular para o conteúdo</a>

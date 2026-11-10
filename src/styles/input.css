@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  [hidden] { display: none !important; }
+  html { scroll-behavior: smooth; }
+  body { @apply font-sans antialiased bg-boutique-bg text-boutique-text; }
+  h1, h2, h3, h4 { font-family: 'Lexend', 'Inter', sans-serif; }
+  :focus-visible { @apply outline-none ring-2 ring-offset-2 ring-nature-botanic; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+}
+
+@layer components {
+  .card { @apply bg-white border border-slate-200 rounded-2xl p-6 shadow-sm; }
+  .btn { @apply inline-flex items-center justify-center gap-2 min-h-[44px] min-w-[44px] px-4 rounded-xl text-sm font-medium border border-transparent transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed; }
+  .btn-amber { @apply btn bg-nature-amber text-boutique-text font-semibold hover:bg-[#B08C30]; }
+  .btn-green { @apply btn bg-nature-botanic text-white hover:bg-[#244836]; }
+  .btn-outline { @apply btn bg-white border-slate-300 text-boutique-text hover:bg-slate-50; }
+  .btn-danger { @apply btn bg-white border-[#C0392B] text-[#9B2C2C] hover:bg-[#FBEDEC]; }
+  .btn-icon { @apply btn px-0 w-11 rounded-full bg-white border-slate-200 text-slate-600 hover:bg-slate-50; }
+  .input { @apply w-full min-h-[44px] px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-sm text-boutique-text placeholder:text-slate-500; }
+  .label { @apply block text-sm font-semibold mb-1.5; }
+  .badge { @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold; }
+  .th { @apply px-3 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-600; }
+  .nav-link { @apply flex items-center gap-3 min-h-[44px] px-3 rounded-xl text-sm text-slate-700 hover:bg-slate-100 whitespace-nowrap; }
+  .nav-link-active { @apply bg-[#E1EDE6] text-boutique-text font-medium; }
+  .hint { @apply flex items-start gap-3 rounded-xl p-4 text-sm; }
+  .chip { @apply inline-flex items-center justify-center min-h-[44px] px-4 rounded-full border border-slate-300 bg-white text-sm transition-colors cursor-pointer; }
+  .chip[aria-pressed="true"] { @apply bg-[#E8EDF4] border-languages-navy font-medium; }
+  .switch { @apply relative inline-flex w-12 h-7 shrink-0 rounded-full bg-slate-300 transition-colors cursor-pointer; }
+  .switch[aria-checked="true"] { @apply bg-nature-botanic; }
+  .switch::after { content: ''; @apply absolute top-1 left-1 w-5 h-5 rounded-full bg-white transition-transform; }
+  .switch[aria-checked="true"]::after { transform: translateX(20px); }
+}
+
+/* Modo de leitura limpa: esconde tudo que for marcado como decorativo */
+.clean-reading [data-decor] { display: none !important; }

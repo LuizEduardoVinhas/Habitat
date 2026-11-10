@@ -1,0 +1,51 @@
+<%
+  const _t = !!user && user.role === 'TEACHER';
+  const _a = (typeof active !== 'undefined') ? active : '';
+  const _nav = _t ? [
+    { k: 'home', label: 'Início', href: '/admin/dashboard', icon: 'layout-grid' },
+    { k: 'appointments', label: 'Agendamentos', href: '/admin/appointments', icon: 'calendar' },
+    { k: 'blocks', label: 'Bloqueios UFPE', href: '/admin/research-blocks', icon: 'flask' },
+    { k: 'materials', label: 'Materiais', href: '/admin/materials', icon: 'library' },
+    { k: 'submissions', label: 'Envios dos alunos', href: '/admin/submissions', icon: 'inbox' },
+    { k: 'students', label: 'Alunos', href: '/admin/students', icon: 'users' }
+  ] : [
+    { k: 'home', label: 'Início', href: '/student/dashboard', icon: 'layout-grid' },
+    { k: 'materials', label: 'Meus materiais', href: '/student/dashboard#materiais', icon: 'library' },
+    { k: 'submissions', label: 'Enviar material', href: '/student/submissions', icon: 'send' },
+    { k: 'tutor', label: 'Tira-dúvidas IA', href: '/student/tutor', icon: 'message' },
+    { k: 'agenda', label: 'Agenda', href: '/student/dashboard#agenda', icon: 'calendar' },
+    { k: 'progress', label: 'Meu progresso', href: '/student/dashboard#progresso', icon: 'bar-chart' }
+  ];
+  const _full = (user && user.full_name) ? user.full_name : 'Usuário';
+  const _name = _t ? 'Prof.ª ' + firstName(_full.replace(/^Professora\s+/i, '')) : _full;
+  const _role = _t ? 'Administradora' : 'Estudante';
+%>
+<aside class="hidden lg:flex flex-col w-[232px] shrink-0 gap-6 bg-white border-r border-slate-200 p-[18px] sticky top-0 h-screen overflow-y-auto" data-decor>
+  <%- include('logo') %>
+  <nav aria-label="Navegação principal" class="flex flex-col gap-1.5">
+    <% _nav.forEach(function (n) { %>
+      <% if (n.href) { %>
+        <a href="<%= n.href %>" class="nav-link <%= _a === n.k ? 'nav-link-active' : '' %>" <%- _a === n.k ? 'aria-current="page"' : '' %>><%- icon(n.icon, 'w-5 h-5') %><%= n.label %></a>
+      <% } else { %>
+        <span class="nav-link opacity-60 cursor-not-allowed" aria-disabled="true" title="Em breve"><%- icon(n.icon, 'w-5 h-5') %><%= n.label %></span>
+      <% } %>
+    <% }) %>
+  </nav>
+  <div class="mt-2 rounded-2xl bg-slate-50 border border-slate-200 p-3">
+    <div class="flex items-center gap-3 pb-3 border-b border-slate-200">
+      <span class="grid place-items-center w-10 h-10 shrink-0 rounded-full text-white text-sm font-semibold <%= _t ? 'bg-nature-botanic' : 'bg-languages-navy' %>" aria-hidden="true"><%= initials(_full) %></span>
+      <div class="min-w-0">
+        <p class="text-sm font-semibold truncate"><%= _name %></p>
+        <p class="text-xs text-slate-600"><%= _role %></p>
+      </div>
+    </div>
+    <button type="button" data-logout class="mt-2 w-full nav-link text-xs text-slate-600"><%- icon('log-out', 'w-4 h-4') %>Sair com segurança</button>
+  </div>
+</aside>
+
+<nav aria-label="Navegação principal" class="lg:hidden bg-white border-b border-slate-200 px-4 py-2 flex items-center gap-1 overflow-x-auto" data-decor>
+  <% _nav.filter(function (n) { return n.href; }).forEach(function (n) { %>
+    <a href="<%= n.href %>" class="nav-link <%= _a === n.k ? 'nav-link-active' : '' %>" <%- _a === n.k ? 'aria-current="page"' : '' %>><%- icon(n.icon, 'w-5 h-5') %><%= n.label %></a>
+  <% }) %>
+  <button type="button" data-logout class="nav-link ml-auto"><%- icon('log-out', 'w-5 h-5') %>Sair</button>
+</nav>

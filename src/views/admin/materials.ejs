@@ -1,0 +1,211 @@
+<%- include('../layouts/header', { title: 'Materiais' }) %>
+<%
+  const _kpis = [
+    { label: 'Materiais publicados', value: stats.total, sub: stats.thisMonth + ' neste mês', icon: 'copy', box: 'bg-[#E8EDF4] text-languages-navy', cls: 'text-slate-700' },
+    { label: 'Para toda a turma', value: stats.forClass, sub: 'visíveis a todos os alunos', icon: 'users', box: 'bg-[#E1EDE6] text-nature-botanic', cls: 'text-nature-botanic' },
+    { label: 'Individuais', value: stats.individual, sub: 'destinados a um aluno', icon: 'user', box: 'bg-[#F6EFD9] text-[#8A6A14]', cls: 'text-[#7A5C10]' }
+  ];
+%>
+<div class="lg:flex">
+  <%- include('../layouts/sidebar', { active: 'materials' }) %>
+  <div class="flex-1 min-w-0">
+    <%- include('../layouts/topbar', { heading: 'Materiais', sub: 'Publique conteúdos acessíveis para seus alunos' }) %>
+
+    <main id="conteudo" class="p-6 lg:p-8 space-y-6">
+      <section class="grid sm:grid-cols-3 gap-4" aria-label="Indicadores">
+        <% _kpis.forEach(function (k) { %>
+          <div class="card p-5">
+            <div class="flex items-start justify-between gap-3"><p class="text-sm text-slate-600"><%= k.label %></p><span class="grid place-items-center w-10 h-10 rounded-lg <%= k.box %>"><%- icon(k.icon, 'w-5 h-5') %></span></div>
+            <p class="mt-3 text-4xl font-semibold"><%= k.value %></p>
+            <p class="mt-2 text-xs font-semibold <%= k.cls %>"><%= k.sub %></p>
+          </div>
+        <% }) %>
+      </section>
+
+      <div class="grid xl:grid-cols-[420px_1fr] gap-6 items-start">
+        <div class="space-y-4">
+          <section class="card" aria-labelledby="pub-t">
+            <h2 id="pub-t" class="text-xl font-semibold">Publicar novo material</h2>
+            <p class="text-xs text-slate-600 mt-1">PDF de até 25 MB • nome legível recomendado</p>
+            <form id="matForm" class="mt-5 space-y-5" novalidate>
+              <div>
+                <input id="file" name="file" type="file" accept="application/pdf,.pdf" class="sr-only">
+                <label id="drop" for="file" class="block cursor-pointer rounded-xl border-2 border-dashed border-languages-navy p-6 text-center min-h-[128px] focus-within:ring-2">
+                  <span class="mx-auto grid place-items-center w-10 h-10 rounded-lg bg-[#E8EDF4] text-languages-navy"><%- icon('cloud-upload', 'w-5 h-5') %></span>
+                  <span id="dropText" class="mt-3 block text-sm">Arraste o PDF ou clique para buscar</span>
+                  <span class="mt-1 block text-[11px] text-slate-600">PDF acessível • máximo 25 MB</span>
+                </label>
+              </div>
+              <div><label for="title" class="label">Título</label><input id="title" name="title" class="input" maxlength="160" required placeholder="Ex.: Guia de Bioacumulação Marinha"></div>
+              <div><label for="description" class="label">Descrição</label><textarea id="description" name="description" rows="4" class="input" maxlength="4000" placeholder="Resumo visual, exemplos e questões de revisão da aula."></textarea></div>
+              <div>
+                <label for="area" class="label">Área do Conhecimento</label>
+                <select id="area" name="subject_area_id" class="input" required>
+                  <option value="">Selecione</option>
+                  <% subjectAreas.forEach(function (a) { %><option value="<%= a.id || '' %>"><%= a.name %></option><% }) %>
+                </select>
+              </div>
+              <fieldset>
+                <legend class="label">Destinatário</legend>
+                <div class="grid grid-cols-2 gap-1 p-1 rounded-xl bg-slate-100" role="radiogroup" aria-label="Destinatário">
+                  <button type="button" role="radio" aria-checked="true" data-target="all" class="tgt min-h-[44px] rounded-lg text-xs bg-white shadow-sm">Todos os alunos</button>
+                  <button type="button" role="radio" aria-checked="false" data-target="one" class="tgt min-h-[44px] rounded-lg text-xs text-slate-600">Aluno específico</button>
+                </div>
+                <div id="studentBox" hidden class="mt-3">
+                  <label for="student" class="sr-only">Aluno</label>
+                  <select id="student" name="target_student_id" class="input">
+                    <option value="">Escolha o aluno</option>
+                    <% students.forEach(function (s) { %><option value="<%= s.id %>"><%= s.name %></option><% }) %>
+                  </select>
+                </div>
+              </fieldset>
+              <div id="matMsg" role="alert" hidden></div>
+              <button type="submit" id="pubBtn" class="btn-amber w-full"><%- icon('send', 'w-5 h-5') %><span>Publicar material</span></button>
+            </form>
+          </section>
+          <p class="hint bg-[#F6EFD9]"><%- icon('lightbulb', 'w-4 h-4 mt-0.5 shrink-0 text-[#8A6A14]') %>Confira o PDF antes de publicar: ele fica disponível imediatamente para os destinatários.</p>
+        </div>
+
+        <div class="space-y-4 min-w-0">
+          <section class="card" aria-label="Filtros">
+            <div class="grid md:grid-cols-3 gap-4">
+              <div><label for="fq" class="label">Buscar</label><input id="fq" type="search" class="input" placeholder="Título ou aluno"></div>
+              <div><label for="farea" class="label">Área</label><select id="farea" class="input"><option value="">Todas</option><% subjectAreas.forEach(function (a) { %><option value="<%= a.code %>"><%= a.name %></option><% }) %></select></div>
+              <div><label for="fdest" class="label">Destinatário</label>
+                <select id="fdest" class="input"><option value="">Todos</option><option value="__class">Turma (todos os alunos)</option><% students.forEach(function (s) { %><option value="<%= s.id %>"><%= s.name %></option><% }) %></select></div>
+            </div>
+          </section>
+
+          <section class="card" aria-labelledby="post-t">
+            <div class="flex items-start justify-between gap-3"><div><h2 id="post-t" class="text-xl font-semibold">Materiais postados</h2><p id="postCount" class="text-xs text-slate-600 mt-1" aria-live="polite"></p></div></div>
+            <div class="mt-4 overflow-x-auto">
+              <table class="w-full min-w-[640px] text-sm">
+                <thead class="bg-slate-50"><tr><th scope="col" class="th">Material</th><th scope="col" class="th">Área</th><th scope="col" class="th">Destinatário</th><th scope="col" class="th">Publicado</th><th scope="col" class="th">Arquivo</th></tr></thead>
+                <tbody>
+                  <% materials.forEach(function (mt) { const t = mt.area ? areaTheme(mt.area.code) : areaTheme(''); %>
+                    <tr class="mrow border-b border-slate-100" data-area="<%= mt.area ? mt.area.code : '' %>" data-dest="<%= mt.target_student_id || '__class' %>" data-search="<%= (mt.title + ' ' + (mt.targetName || '')).toLowerCase() %>">
+                      <td class="px-3 py-4">
+                        <div class="flex items-center gap-3">
+                          <span class="grid place-items-center w-10 h-10 shrink-0 rounded-lg <%= t.soft %> <%= t.text %>"><%- icon('file-text', 'w-5 h-5') %></span>
+                          <div class="min-w-0">
+                            <p class="font-semibold"><%= mt.title %></p>
+                            <% if (mt.description) { %><p class="text-xs text-slate-600 line-clamp-1 max-w-[260px]"><%= mt.description %></p><% } %>
+                            <% if (mt.rag_status === 'INDEXED') { %>
+                              <span class="badge mt-1 bg-[#E1EDE6] text-nature-botanic">Disponível no assistente • <%= mt.rag_chunks %> trechos</span>
+                            <% } else if (mt.rag_status === 'PROCESSING') { %>
+                              <span class="badge mt-1 bg-[#F6EFD9] text-[#7A5C10]">Indexando para o assistente</span>
+                            <% } else { %>
+                              <span class="badge mt-1 bg-[#FBEDEC] text-[#9B2C2C]">Não disponível no assistente</span>
+                              <% if (mt.rag_error) { %><p class="mt-1 text-xs text-[#9B2C2C]"><%= mt.rag_error %></p><% } %>
+                              <button type="button" class="reindex mt-2 text-xs font-semibold underline" data-id="<%= mt.id %>">Tentar indexar novamente</button>
+                            <% } %>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="px-3 py-4"><span class="badge <%= t.soft %> <%= t.text %>"><%= mt.area ? mt.area.short || mt.area.name : '—' %></span></td>
+                      <td class="px-3 py-4 text-xs"><%= mt.targetName || 'Todos os alunos' %></td>
+                      <td class="px-3 py-4 text-xs text-slate-600 whitespace-nowrap"><%= fmtDay(mt.createdAt) %></td>
+                      <td class="px-3 py-4"><a href="<%= mt.file_url %>" target="_blank" rel="noopener" class="btn-outline text-xs" aria-label="Abrir PDF de <%= mt.title %>"><%- icon('eye', 'w-4 h-4') %>Abrir</a></td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+            <p id="mEmpty" hidden class="mt-4 rounded-xl bg-slate-50 p-6 text-center text-sm text-slate-600"><%= materials.length ? 'Nenhum material encontrado com esses filtros.' : 'Nenhum material publicado ainda. Use o formulário ao lado.' %></p>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var rows = Array.prototype.slice.call(document.querySelectorAll('.mrow'));
+  var total = rows.length;
+
+  /* ---- filtros ---- */
+  function filter() {
+    var q = $('fq').value.trim().toLowerCase(), a = $('farea').value, d = $('fdest').value, n = 0;
+    rows.forEach(function (r) {
+      var ok = (!q || r.dataset.search.indexOf(q) >= 0) && (!a || r.dataset.area === a) && (!d || r.dataset.dest === d);
+      r.hidden = !ok; if (ok) n++;
+    });
+    $('mEmpty').hidden = n > 0;
+    $('postCount').textContent = n + (n === 1 ? ' item' : ' itens') + (n !== total ? ' de ' + total : '');
+  }
+  ['fq', 'farea', 'fdest'].forEach(function (id) { $(id).addEventListener('input', filter); });
+  filter();
+
+  document.querySelectorAll('.reindex').forEach(function (button) {
+    button.addEventListener('click', async function () {
+      button.disabled = true;
+      button.textContent = 'Indexando…';
+      try {
+        await ST.api('/admin/materials/' + button.dataset.id + '/index', { method: 'POST' });
+        location.reload();
+      } catch (error) {
+        ST.alert($('matMsg'), error.message);
+        button.disabled = false;
+        button.textContent = 'Tentar indexar novamente';
+      }
+    });
+  });
+
+  /* ---- destinatário ---- */
+  var target = 'all';
+  document.querySelectorAll('.tgt').forEach(function (b) {
+    b.addEventListener('click', function () {
+      target = b.dataset.target;
+      document.querySelectorAll('.tgt').forEach(function (x) {
+        var on = x === b;
+        x.setAttribute('aria-checked', on ? 'true' : 'false');
+        x.classList.toggle('bg-white', on); x.classList.toggle('shadow-sm', on); x.classList.toggle('text-slate-600', !on);
+      });
+      $('studentBox').hidden = target !== 'one';
+      if (target === 'one') $('student').focus();
+    });
+  });
+
+  /* ---- upload ---- */
+  var input = $('file'), msg = $('matMsg');
+  function checkFile(f) {
+    if (!f) return false;
+    if (f.type !== 'application/pdf' && !/\.pdf$/i.test(f.name)) { ST.alert(msg, 'Envie apenas arquivos PDF.'); return false; }
+    if (f.size > 25 * 1024 * 1024) { ST.alert(msg, 'O PDF deve ter no máximo 25 MB.'); return false; }
+    ST.alert(msg, ''); return true;
+  }
+  function showFile() {
+    var f = input.files[0];
+    $('dropText').textContent = f ? f.name + ' • ' + (f.size / 1048576).toFixed(1) + ' MB' : 'Arraste o PDF ou clique para buscar';
+    if (f && !$('title').value) $('title').value = f.name.replace(/\.pdf$/i, '').replace(/[_-]+/g, ' ');
+  }
+  input.addEventListener('change', function () { if (input.files[0] && !checkFile(input.files[0])) input.value = ''; showFile(); });
+  ['dragover', 'dragenter'].forEach(function (ev) { $('drop').addEventListener(ev, function (e) { e.preventDefault(); $('drop').classList.add('bg-[#E8EDF4]'); }); });
+  ['dragleave', 'drop'].forEach(function (ev) { $('drop').addEventListener(ev, function (e) { e.preventDefault(); $('drop').classList.remove('bg-[#E8EDF4]'); }); });
+  $('drop').addEventListener('drop', function (e) {
+    var f = e.dataTransfer.files[0];
+    if (f && checkFile(f)) { var dt = new DataTransfer(); dt.items.add(f); input.files = dt.files; showFile(); }
+  });
+
+  $('matForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var btn = $('pubBtn');
+    if (!input.files[0]) { ST.alert(msg, 'Selecione um PDF para publicar.'); return; }
+    if (!checkFile(input.files[0])) return;
+    if ($('title').value.trim().length < 3) { ST.alert(msg, 'Informe um título para o material.'); $('title').focus(); return; }
+    if (!$('area').value) { ST.alert(msg, 'Escolha a área do conhecimento.'); $('area').focus(); return; }
+    if (target === 'one' && !$('student').value) { ST.alert(msg, 'Escolha o aluno destinatário.'); $('student').focus(); return; }
+    var fd = new FormData();
+    fd.append('title', $('title').value); fd.append('description', $('description').value);
+    fd.append('subject_area_id', $('area').value);
+    if (target === 'one') fd.append('target_student_id', $('student').value);
+    fd.append('file', input.files[0]);
+    btn.disabled = true; btn.querySelector('span').textContent = 'Publicando…';
+    try { await ST.api('/admin/materials', { method: 'POST', form: fd }); location.reload(); }
+    catch (ex) { ST.alert(msg, ex.message); btn.disabled = false; btn.querySelector('span').textContent = 'Publicar material'; }
+  });
+});
+</script>
+<%- include('../layouts/end') %>

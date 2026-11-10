@@ -1,0 +1,206 @@
+<%- include('../layouts/header', { title: 'Bloqueios de pesquisa' }) %>
+<%
+  const _dur = function (b) { return Math.round((new Date(b.end) - new Date(b.start)) / 3600000 * 10) / 10; };
+  const _upcoming = blocks.filter(function (b) { return new Date(b.end) >= new Date(); }).slice(0, 8);
+  const _boot = { blocks: blocks.map(function (b) { return { start: b.start, end: b.end }; }), conflicts: conflicts };
+%>
+<div class="lg:flex">
+  <%- include('../layouts/sidebar', { active: 'blocks' }) %>
+  <div class="flex-1 min-w-0">
+    <%- include('../layouts/topbar', { heading: 'Bloqueios de Pesquisa', sub: 'Proteja seus horários de campo e laboratório na UFPE' }) %>
+
+    <main id="conteudo" class="p-6 lg:p-8 space-y-6">
+      <section class="rounded-2xl bg-humanities-terracotta text-white p-5 lg:p-6 flex flex-wrap items-center gap-5" aria-label="Sobre os bloqueios">
+        <span class="grid place-items-center w-14 h-14 rounded-xl bg-white/15"><%- icon('flask', 'w-7 h-7') %></span>
+        <div class="grow min-w-[240px]">
+          <h2 class="text-xl font-semibold">Pesquisa Científica Ecotoxicologia UFPE</h2>
+          <p class="mt-1 text-sm text-white/90">Bloqueios impedem novos agendamentos e preservam a rotina de coleta, análise e orientação acadêmica.</p>
+        </div>
+        <span class="badge bg-[#F6EFD9] text-[#7A5C10]"><%- icon('calendar-x', 'w-3.5 h-3.5') %><%= activeCount %> <%= activeCount === 1 ? 'bloqueio ativo' : 'bloqueios ativos' %></span>
+      </section>
+
+      <div class="grid xl:grid-cols-[380px_1fr] gap-6 items-start">
+        <div class="space-y-6">
+          <section class="card" aria-labelledby="criar-t">
+            <h2 id="criar-t" class="text-xl font-semibold">Criar bloqueio</h2>
+            <p class="text-xs text-slate-600 mt-1">O período ficará indisponível para alunos.</p>
+            <form id="blockForm" class="mt-5 space-y-4" novalidate>
+              <div><label for="bStart" class="label">Início</label><input id="bStart" type="datetime-local" step="900" class="input" required></div>
+              <div><label for="bEnd" class="label">Término</label><input id="bEnd" type="datetime-local" step="900" class="input" required></div>
+              <div><label for="bReason" class="label">Motivo</label><input id="bReason" class="input" maxlength="200" value="Pesquisa Científica UFPE"></div>
+              <div>
+                <label for="bRepeat" class="label">Recorrência</label>
+                <select id="bRepeat" class="input">
+                  <option value="none">Não repetir</option>
+                  <option value="weekly">Toda semana (4 vezes)</option>
+                  <option value="biweekly">A cada 2 semanas (4 vezes)</option>
+                </select>
+              </div>
+              <p id="conflictMsg" hidden class="hint bg-[#F6EFD9]" role="status"><%- icon('lightbulb', 'w-4 h-4 mt-0.5 shrink-0 text-[#8A6A14]') %><span></span></p>
+              <div id="formMsg" role="alert" hidden></div>
+              <button type="submit" id="saveBtn" class="btn-amber w-full"><%- icon('calendar-check', 'w-5 h-5') %><span>Salvar bloqueio</span></button>
+            </form>
+          </section>
+
+          <section id="delPanel" hidden class="rounded-2xl border border-[#E5B4B0] bg-[#FBEDEC] p-5" role="alertdialog" aria-labelledby="del-t" aria-describedby="del-d">
+            <h2 id="del-t" class="text-sm font-bold text-[#9B2C2C] flex items-center gap-2"><%- icon('trash', 'w-4 h-4') %>Excluir bloqueio?</h2>
+            <p id="del-d" class="mt-2 text-xs"><span id="delInfo"></span> O horário voltará a aceitar solicitações.</p>
+            <div id="delErr" role="alert" hidden class="mt-3"></div>
+            <div class="mt-4 grid grid-cols-2 gap-3">
+              <button type="button" id="delKeep" class="btn-outline">Manter</button>
+              <button type="button" id="delOk" class="btn-danger">Excluir</button>
+            </div>
+          </section>
+        </div>
+
+        <div class="space-y-6 min-w-0">
+          <section class="card" aria-labelledby="cal-t">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="flex items-center gap-2">
+                <button type="button" id="prevM" class="btn-icon" aria-label="Mês anterior"><%- icon('chevron-left', 'w-5 h-5') %></button>
+                <h2 id="cal-t" class="text-2xl font-semibold min-w-[160px] text-center" aria-live="polite"></h2>
+                <button type="button" id="nextM" class="btn-icon" aria-label="Próximo mês"><%- icon('chevron-right', 'w-5 h-5') %></button>
+              </div>
+              <div class="flex gap-2"><span class="badge bg-[#F6EAE4] text-humanities-terracotta">Dia inteiro</span><span class="badge bg-[#F6EFD9] text-[#7A5C10]">Parcial</span></div>
+            </div>
+            <div class="mt-5 overflow-x-auto">
+              <div class="min-w-[560px]">
+                <div class="grid grid-cols-7 gap-2 text-center text-[11px] font-semibold uppercase text-slate-600" aria-hidden="true"><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span><span>Dom</span></div>
+                <div id="cal" class="mt-2 grid grid-cols-7 gap-2"></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="card" aria-labelledby="prox-t">
+            <h2 id="prox-t" class="text-xl font-semibold">Próximos bloqueios</h2>
+            <% if (_upcoming.length) { %>
+              <ul class="mt-4 space-y-3">
+                <% _upcoming.forEach(function (b) { const sameDay = dayKey(b.start) === dayKey(b.end); %>
+                  <li class="rounded-xl bg-slate-50 p-4 flex items-center gap-4">
+                    <span class="grid place-items-center w-10 h-10 shrink-0 rounded-lg bg-[#F6EAE4] text-humanities-terracotta"><%- icon('calendar-x', 'w-5 h-5') %></span>
+                    <div class="min-w-0 grow">
+                      <p class="text-sm font-semibold"><%= fmtDay(b.start) %> • <%= fmtTime(b.start) %>–<%= sameDay ? fmtTime(b.end) : fmtDay(b.end) + ' ' + fmtTime(b.end) %></p>
+                      <p class="text-xs text-slate-600 truncate"><%= b.reason %></p>
+                    </div>
+                    <span class="badge bg-[#F6EAE4] text-humanities-terracotta"><%= _dur(b) %>h</span>
+                    <button type="button" class="btn-icon rounded-lg border-transparent bg-[#F6EAE4] text-humanities-terracotta del" data-id="<%= b.id %>" data-info="<%= fmtDay(b.start) %> • <%= b.reason %>." aria-label="Excluir bloqueio de <%= fmtDay(b.start) %>"><%- icon('trash', 'w-5 h-5') %></button>
+                  </li>
+                <% }) %>
+              </ul>
+            <% } else { %>
+              <p class="mt-4 rounded-xl bg-slate-50 p-6 text-center text-sm text-slate-600">Nenhum bloqueio programado. Use o formulário para proteger seus horários de pesquisa.</p>
+            <% } %>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script id="boot" type="application/json"><%- JSON.stringify(_boot).replace(/</g, '\\u003c') %></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var boot = JSON.parse(document.getElementById('boot').textContent);
+  var blocks = boot.blocks.map(function (b) { return { s: new Date(b.start).getTime(), e: new Date(b.end).getTime() }; });
+  var conflicts = boot.conflicts.map(function (c) { return { s: new Date(c.start).getTime(), e: new Date(c.end).getTime(), name: c.name }; });
+  var MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  var $ = function (id) { return document.getElementById(id); };
+  var pad = function (n) { return String(n).padStart(2, '0'); };
+  var H = 3600000, DAYMS = 24 * H;
+  var today = ST.dayKey(new Date());
+  var y = +today.slice(0, 4), m = +today.slice(5, 7) - 1;
+
+  /* ---- calendário ---- */
+  function render() {
+    $('cal-t').textContent = MONTHS[m] + ' ' + y;
+    var cal = $('cal'); cal.innerHTML = '';
+    var offset = (new Date(Date.UTC(y, m, 1)).getUTCDay() + 6) % 7, days = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+    for (var i = 0; i < offset; i++) cal.appendChild(document.createElement('div'));
+    for (var d = 1; d <= days; d++) {
+      var key = y + '-' + pad(m + 1) + '-' + pad(d);
+      var ds = ST.at(key, '00:00').getTime(), de = ds + DAYMS, covered = 0, first = null;
+      blocks.forEach(function (b) {
+        var s = Math.max(b.s, ds), e = Math.min(b.e, de);
+        if (e > s) { covered += e - s; if (!first || s < first.s) first = { s: s, e: e }; }
+      });
+      var cell = document.createElement('div');
+      var label = d + ' de ' + MONTHS[m].toLowerCase();
+      var cls = 'min-h-[60px] rounded-lg border p-2 text-xs ';
+      var sub = '';
+      if (covered >= 8 * H) { cls += 'border-2 border-humanities-terracotta bg-[#F6EAE4] text-humanities-terracotta'; sub = 'UFPE'; label += ', bloqueio o dia inteiro'; }
+      else if (covered > 0) { cls += 'border-2 border-nature-amber bg-[#F6EFD9] text-[#7A5C10]'; sub = ST.hm(first.s).slice(0, 2) + '–' + ST.hm(first.e).slice(0, 2) + 'h'; label += ', bloqueio parcial'; }
+      else { cls += 'border-slate-200 bg-slate-50'; }
+      if (key === today) cls += ' ring-2 ring-offset-1 ring-languages-navy';
+      cell.className = cls; cell.setAttribute('role', 'img'); cell.setAttribute('aria-label', label);
+      cell.innerHTML = '<p class="font-bold ' + (covered ? '' : 'text-boutique-text') + '">' + d + '</p>' + (sub ? '<p class="mt-1 text-[10px] font-semibold">' + sub + '</p>' : '');
+      cal.appendChild(cell);
+    }
+  }
+  $('prevM').addEventListener('click', function () { m--; if (m < 0) { m = 11; y--; } render(); });
+  $('nextM').addEventListener('click', function () { m++; if (m > 11) { m = 0; y++; } render(); });
+
+  /* ---- formulário ---- */
+  var tomorrow = ST.dayKey(Date.now() + DAYMS);
+  $('bStart').value = tomorrow + 'T08:00';
+  $('bEnd').value = tomorrow + 'T14:00';
+  var toDate = function (v) { return v ? new Date(v + ':00-03:00') : null; };
+
+  function checkConflicts() {
+    var s = toDate($('bStart').value), e = toDate($('bEnd').value), box = $('conflictMsg');
+    if (!s || !e || e <= s) { box.hidden = true; return; }
+    var times = ($('bRepeat').value === 'none') ? [0] : [0, 1, 2, 3];
+    var step = $('bRepeat').value === 'biweekly' ? 14 * DAYMS : 7 * DAYMS;
+    var hits = [];
+    times.forEach(function (k) {
+      conflicts.forEach(function (c) { if (c.s < e.getTime() + k * step && c.e > s.getTime() + k * step) hits.push(c.name); });
+    });
+    box.hidden = hits.length === 0;
+    if (hits.length) box.querySelector('span').textContent = hits.length + (hits.length === 1 ? ' aula confirmada entra' : ' aulas confirmadas entram') + ' em conflito (' + hits.slice(0, 3).join(', ') + '). Elas não serão canceladas automaticamente.';
+  }
+  ['bStart', 'bEnd', 'bRepeat'].forEach(function (id) { $(id).addEventListener('input', checkConflicts); });
+  checkConflicts();
+
+  $('blockForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var msg = $('formMsg'), btn = $('saveBtn');
+    var s = toDate($('bStart').value), en = toDate($('bEnd').value);
+    if (!s || !en) { ST.alert(msg, 'Informe o início e o término.'); return; }
+    if (en <= s) { ST.alert(msg, 'O término precisa ser depois do início.'); return; }
+    var n = $('bRepeat').value === 'none' ? 1 : 4, step = ($('bRepeat').value === 'biweekly' ? 14 : 7) * DAYMS;
+    btn.disabled = true; ST.alert(msg, '');
+    var done = 0;
+    try {
+      for (var k = 0; k < n; k++) {
+        await ST.api('/admin/research-blocks', { method: 'POST', json: {
+          start_time: new Date(s.getTime() + k * step).toISOString(),
+          end_time: new Date(en.getTime() + k * step).toISOString(),
+          reason: $('bReason').value,
+        } });
+        done++;
+      }
+      location.reload();
+    } catch (ex) {
+      ST.alert(msg, (done ? done + ' de ' + n + ' bloqueios foram salvos. ' : '') + ex.message);
+      btn.disabled = false;
+    }
+  });
+
+  /* ---- exclusão ---- */
+  var delId = null;
+  document.querySelectorAll('.del').forEach(function (b) {
+    b.addEventListener('click', function () {
+      delId = b.dataset.id; $('delInfo').textContent = b.dataset.info; ST.alert($('delErr'), '');
+      $('delPanel').hidden = false; $('delPanel').scrollIntoView({ block: 'nearest' }); $('delKeep').focus();
+    });
+  });
+  $('delKeep').addEventListener('click', function () { $('delPanel').hidden = true; });
+  $('delOk').addEventListener('click', async function () {
+    this.disabled = true;
+    try { await ST.api('/admin/research-blocks/' + delId, { method: 'DELETE' }); location.reload(); }
+    catch (ex) { ST.alert($('delErr'), ex.message); this.disabled = false; }
+  });
+
+  render();
+});
+</script>
+<%- include('../layouts/end') %>

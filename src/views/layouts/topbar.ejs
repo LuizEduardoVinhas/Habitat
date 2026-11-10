@@ -1,0 +1,14 @@
+<%
+  const _tb = !!user && user.role === 'TEACHER';
+%>
+<header class="bg-white border-b border-slate-200 px-6 lg:px-8 py-4 flex flex-wrap items-center justify-between gap-4">
+  <div class="min-w-0">
+    <h1 class="text-2xl font-semibold"><%= heading %></h1>
+    <% if (typeof sub !== 'undefined' && sub) { %><p class="text-sm text-slate-600"><%= sub %></p><% } %>
+  </div>
+  <div class="flex items-center gap-3" data-decor>
+    <%- (typeof actions !== 'undefined' && actions) ? actions : '' %>
+    <a href="<%= site.whatsappUrl %>" target="_blank" rel="noopener" class="btn-icon" aria-label="Pedir ajuda pelo WhatsApp"><%- icon('help', 'w-5 h-5') %></a>
+    <span class="badge bg-[#E1EDE6] text-nature-botanic"><%= _tb ? 'Área da professora' : 'Área do aluno' %></span>
+  </div>
+</header>

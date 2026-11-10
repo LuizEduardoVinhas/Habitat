@@ -1,0 +1,24 @@
+<%
+  const _logged = !!user;
+  const _home = _logged ? (user.role === 'TEACHER' ? '/admin/dashboard' : '/student/dashboard') : '/login';
+  const _label = _logged ? (user.role === 'TEACHER' ? 'Meu painel' : 'Meu painel') : 'Área do Aluno';
+%>
+<header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200">
+  <div class="max-w-[1240px] mx-auto px-6 min-h-[72px] flex items-center justify-between gap-6">
+    <%- include('logo') %>
+    <nav aria-label="Seções da página" class="hidden md:flex items-center gap-8 text-sm font-semibold">
+      <a href="#sobre" class="min-h-[44px] inline-flex items-center hover:text-nature-botanic">Sobre</a>
+      <a href="#disciplinas" class="min-h-[44px] inline-flex items-center hover:text-nature-botanic">Disciplinas</a>
+      <a href="#pesquisa" class="min-h-[44px] inline-flex items-center hover:text-nature-botanic">Pesquisa UFPE</a>
+    </nav>
+    <div class="flex items-center gap-3">
+      <% if (_logged) { %>
+        <span class="hidden sm:inline-flex badge bg-[#E1EDE6] text-nature-botanic"><%= user.full_name ? user.full_name : user.email %></span>
+      <% } %>
+      <% if (!_logged) { %>
+        <a href="/cadastro" class="hidden sm:inline-flex btn-green">Primeiro acesso? Cadastre-se</a>
+      <% } %>
+      <a href="<%= _home %>" class="btn-outline"><%- icon('user', 'w-4 h-4') %><%= _label %></a>
+    </div>
+  </div>
+</header>

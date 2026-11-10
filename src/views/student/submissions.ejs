@@ -1,0 +1,92 @@
+<%- include('../layouts/header', { title: 'Enviar material para análise' }) %>
+<div class="lg:flex">
+  <%- include('../layouts/sidebar', { active: 'submissions' }) %>
+  <div class="flex-1 min-w-0">
+    <%- include('../layouts/topbar', { heading: 'Enviar material para análise', sub: 'Compartilhe uma prova, atividade ou conteúdo da escola com a professora' }) %>
+    <main id="conteudo" class="p-6 lg:p-8 grid xl:grid-cols-[420px_1fr] gap-6 items-start">
+      <section class="card" aria-labelledby="send-title">
+        <h2 id="send-title" class="text-xl font-semibold">Novo envio</h2>
+        <p class="mt-2 text-sm text-slate-600">Conte o que você gostaria que a professora analisasse e anexe um arquivo.</p>
+        <form id="submissionForm" class="mt-5 space-y-4" enctype="multipart/form-data" novalidate>
+          <div>
+            <label for="title" class="label">O que você está enviando?</label>
+            <input id="title" name="title" class="input" maxlength="160" required placeholder="Ex.: Conteúdo da prova de Ciências">
+          </div>
+          <div>
+            <label for="description" class="label">Contexto ou dúvida</label>
+            <textarea id="description" name="description" class="input" rows="4" maxlength="3000" placeholder="Informe a matéria, data da prova ou o que gostaria de revisar."></textarea>
+          </div>
+          <div>
+            <label for="file" class="label">Arquivo</label>
+            <input id="file" name="file" type="file" class="input" accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png" required>
+            <p class="mt-1 text-xs text-slate-600">PDF, JPG ou PNG • até 25 MB</p>
+          </div>
+          <div id="submissionMsg" role="alert" hidden></div>
+          <button type="submit" id="sendBtn" class="btn-amber w-full"><%- icon('send', 'w-5 h-5') %><span>Enviar para a professora</span></button>
+        </form>
+      </section>
+
+      <section class="space-y-4" aria-labelledby="history-title">
+        <div>
+          <h2 id="history-title" class="text-xl font-semibold">Meus envios</h2>
+          <p class="text-sm text-slate-600">Acompanhe o retorno da professora por aqui.</p>
+        </div>
+        <% if (submissions.length) { %>
+          <% submissions.forEach(function (item) { const reviewed = item.status === 'REVIEWED'; %>
+            <article class="card" aria-labelledby="submission-<%= item.id %>">
+              <div class="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h3 id="submission-<%= item.id %>" class="text-lg font-semibold"><%= item.title %></h3>
+                  <p class="mt-1 text-xs text-slate-600">Enviado em <%= fmtDayYear(item.createdAt) %></p>
+                </div>
+                <span class="badge <%= reviewed ? 'bg-[#E1EDE6] text-nature-botanic' : 'bg-[#F6EFD9] text-[#7A5C10]' %>"><%= reviewed ? 'Analisado' : 'Aguardando análise' %></span>
+              </div>
+              <% if (item.description) { %><p class="mt-4 text-sm whitespace-pre-line"><%= item.description %></p><% } %>
+              <a class="btn-outline mt-4" href="/submissions/<%= item.id %>/file"><%- icon('file-text', 'w-4 h-4') %>Abrir meu arquivo</a>
+              <% if (reviewed && item.teacher_response) { %>
+                <div class="mt-4 rounded-xl bg-[#E8F0EB] p-4">
+                  <p class="text-xs font-bold text-nature-botanic">Resposta da professora • <%= fmtDayYear(item.reviewed_at) %></p>
+                  <p class="mt-2 text-sm whitespace-pre-line"><%= item.teacher_response %></p>
+                </div>
+              <% } %>
+            </article>
+          <% }) %>
+        <% } else { %>
+          <div class="card text-center text-sm text-slate-600">Seus envios e as respostas da professora aparecerão aqui.</div>
+        <% } %>
+      </section>
+    </main>
+  </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var form = document.getElementById('submissionForm');
+  var message = document.getElementById('submissionMsg');
+  var button = document.getElementById('sendBtn');
+  form.addEventListener('submit', async function (event) {
+    event.preventDefault();
+    ST.alert(message, '');
+    if (form.title.value.trim().length < 3) {
+      ST.alert(message, 'Informe um título com pelo menos 3 caracteres.');
+      form.title.focus();
+      return;
+    }
+    if (!form.file.files.length) {
+      ST.alert(message, 'Selecione um PDF ou uma imagem JPG/PNG.');
+      form.file.focus();
+      return;
+    }
+    button.disabled = true;
+    button.querySelector('span').textContent = 'Enviando…';
+    try {
+      await ST.api('/student/submissions', { method: 'POST', form: new FormData(form) });
+      location.reload();
+    } catch (error) {
+      ST.alert(message, error.message);
+      button.disabled = false;
+      button.querySelector('span').textContent = 'Enviar para a professora';
+    }
+  });
+});
+</script>
+<%- include('../layouts/end') %>

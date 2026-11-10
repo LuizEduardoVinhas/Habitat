@@ -1,0 +1,104 @@
+<%- include('../layouts/header', { title: 'Tira-dúvidas com seus materiais' }) %>
+<div class="lg:flex">
+  <%- include('../layouts/sidebar', { active: 'tutor' }) %>
+  <div class="flex-1 min-w-0">
+    <%- include('../layouts/topbar', { heading: 'Tira-dúvidas com seus materiais', sub: 'Respostas baseadas nos PDFs publicados pela professora' }) %>
+    <main id="conteudo" class="p-6 lg:p-8 max-w-4xl mx-auto">
+      <section class="card p-0 overflow-hidden" aria-label="Chat de estudos">
+        <div class="bg-nature-botanic text-white p-5">
+          <div class="flex items-center gap-3">
+            <span class="grid place-items-center w-11 h-11 rounded-xl bg-white/15"><%- icon('sparkles', 'w-5 h-5') %></span>
+            <div>
+              <h2 class="font-semibold">Assistente de estudos Habitat</h2>
+              <p class="text-xs text-white/85">Consulta os materiais aos quais sua conta tem acesso.</p>
+            </div>
+          </div>
+        </div>
+        <div id="chatMessages" class="min-h-[320px] max-h-[58vh] overflow-y-auto p-5 space-y-4" aria-live="polite">
+          <div class="max-w-[90%] rounded-2xl rounded-tl-sm bg-[#F3F4EF] p-4 text-sm">
+            Olá! Pergunte sobre os materiais publicados pela professora. Vou indicar de qual material veio a resposta. Se não encontrar a informação nos PDFs, aviso você.
+          </div>
+        </div>
+        <div id="chatError" role="alert" hidden class="mx-5 mb-4"></div>
+        <form id="chatForm" class="border-t border-slate-200 p-4">
+          <label for="question" class="label">Sua pergunta</label>
+          <div class="flex items-end gap-3">
+            <textarea id="question" name="question" class="input min-h-[56px] resize-y" rows="2" maxlength="1200" required placeholder="Ex.: Como funciona a fotossíntese no material da aula?"></textarea>
+            <button type="submit" id="askBtn" class="btn-green shrink-0" aria-label="Enviar pergunta"><%- icon('send', 'w-5 h-5') %><span class="hidden sm:inline">Enviar</span></button>
+          </div>
+          <p class="mt-2 text-xs text-slate-600">A resposta usa apenas os materiais indexados disponíveis para você. Confira as fontes e confirme assuntos importantes com a professora.</p>
+        </form>
+      </section>
+    </main>
+  </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var form = document.getElementById('chatForm');
+  var question = document.getElementById('question');
+  var messages = document.getElementById('chatMessages');
+  var error = document.getElementById('chatError');
+  var button = document.getElementById('askBtn');
+
+  function addMessage(text, kind) {
+    var bubble = document.createElement('div');
+    bubble.className = kind === 'user'
+      ? 'ml-auto max-w-[90%] rounded-2xl rounded-tr-sm bg-[#E8F0EB] p-4 text-sm whitespace-pre-wrap'
+      : 'max-w-[90%] rounded-2xl rounded-tl-sm bg-[#F3F4EF] p-4 text-sm whitespace-pre-wrap';
+    bubble.textContent = text;
+    messages.appendChild(bubble);
+    messages.scrollTop = messages.scrollHeight;
+    return bubble;
+  }
+
+  form.addEventListener('submit', async function (event) {
+    event.preventDefault();
+    ST.alert(error, '');
+    var text = question.value.trim();
+    if (text.length < 2) {
+      ST.alert(error, 'Escreva uma pergunta antes de enviar.');
+      question.focus();
+      return;
+    }
+    addMessage(text, 'user');
+    question.value = '';
+    question.disabled = true;
+    button.disabled = true;
+    var pending = addMessage('Estou consultando os materiais disponíveis…', 'assistant');
+    try {
+      var result = await ST.api('/api/student/chat', { method: 'POST', json: { question: text } });
+      pending.textContent = result.answer;
+      if (result.sources && result.sources.length) {
+        var sourceBox = document.createElement('div');
+        sourceBox.className = 'mt-3 border-t border-slate-200 pt-3';
+        var label = document.createElement('p');
+        label.className = 'text-xs font-semibold';
+        label.textContent = 'Fontes consultadas';
+        sourceBox.appendChild(label);
+        var list = document.createElement('ul');
+        list.className = 'mt-1 space-y-1';
+        result.sources.forEach(function (source) {
+          var item = document.createElement('li');
+          item.className = 'text-xs text-slate-600';
+          var link = document.createElement('a');
+          link.href = source.url;
+          link.className = 'underline';
+          link.textContent = source.citation + ' ' + source.title + (source.page ? ' • página ' + source.page : '');
+          item.appendChild(link);
+          list.appendChild(item);
+        });
+        sourceBox.appendChild(list);
+        pending.appendChild(sourceBox);
+      }
+    } catch (exception) {
+      pending.remove();
+      ST.alert(error, exception.message);
+    } finally {
+      question.disabled = false;
+      button.disabled = false;
+      question.focus();
+    }
+  });
+});
+</script>
+<%- include('../layouts/end') %>

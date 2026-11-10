@@ -1,0 +1,163 @@
+<%- include('../layouts/header', { title: 'Ecossistema de ensino' }) %>
+<%- include('../layouts/navbar') %>
+<%
+  const _cards = [
+    { code: 'NATURAL_SCIENCES', desc: 'Investigação, experimentos e raciocínio científico para vestibulares e olimpíadas.' },
+    { code: 'LANGUAGES', desc: 'Leitura estratégica, repertório autoral e escrita com clareza e confiança.' },
+    { code: 'HUMAN_SCIENCES', desc: 'Conexões entre contexto, atualidades e pensamento crítico sem excesso de informação.' }
+  ];
+%>
+<main id="conteudo">
+
+  <!-- 1. Hero -->
+  <section class="bg-white">
+    <div class="max-w-[1240px] mx-auto px-6 py-12 lg:py-16 grid lg:grid-cols-[1.1fr_1fr] gap-10 lg:gap-14 items-center">
+      <div>
+        <span class="badge bg-[#E1EDE6] text-nature-botanic"><%- icon('heart', 'w-3.5 h-3.5') %>Ensino inclusivo • Recife e Olinda</span>
+        <h1 class="mt-6 text-4xl lg:text-[52px] font-light leading-[1.1]">Ensino Investigativo e Alto Rendimento Acadêmico</h1>
+        <p class="mt-6 text-lg text-slate-700 leading-relaxed max-w-xl">Aulas particulares que transformam curiosidade em método, com atendimento adaptado para estudantes com TDAH, Autismo e Altas Habilidades.</p>
+        <div class="mt-8 flex flex-wrap gap-3">
+          <a href="#agendar" class="btn-amber"><%- icon('calendar-check', 'w-5 h-5') %>Agendar Aula Avaliativa</a>
+          <a href="#metodologia" class="btn-outline"><%- icon('circle-play', 'w-5 h-5') %>Conhecer a metodologia</a>
+        </div>
+        <ul class="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm font-medium">
+          <li class="flex items-center gap-2 text-nature-botanic"><%- icon('circle-check', 'w-4 h-4') %><span class="text-boutique-text">Plano individual</span></li>
+          <li class="flex items-center gap-2 text-nature-botanic"><%- icon('circle-check', 'w-4 h-4') %><span class="text-boutique-text">Comunicação com a família</span></li>
+          <li class="flex items-center gap-2 text-nature-botanic"><%- icon('circle-check', 'w-4 h-4') %><span class="text-boutique-text">Rotina sem sobrecarga</span></li>
+        </ul>
+      </div>
+      <figure class="relative rounded-3xl overflow-hidden bg-[#F6EFD9] aspect-[4/3] lg:aspect-[4/5]">
+        <img src="/img/habitat-hero.png" alt="Ilustração da professora convidando os alunos a aprender juntos" class="absolute inset-0 w-full h-full object-contain">
+        <figcaption class="absolute left-4 right-4 bottom-4 bg-white/95 rounded-xl px-4 py-3 text-sm flex items-center gap-3">
+          <span class="w-2.5 h-2.5 rounded-full bg-nature-botanic shrink-0" aria-hidden="true"></span>Ciência com acolhimento, previsibilidade e propósito.
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- 2. As 3 áreas do conhecimento -->
+  <section id="disciplinas" class="bg-boutique-bg">
+    <div class="max-w-[1240px] mx-auto px-6 py-14 lg:py-16">
+      <p class="text-xs font-semibold uppercase tracking-wide text-[#8A6A14]">Trilhas de aprendizagem</p>
+      <h2 class="mt-2 text-3xl lg:text-4xl font-semibold">Três áreas, um método que respeita seu ritmo</h2>
+      <p class="mt-3 text-slate-600 max-w-3xl">Conteúdo profundo em blocos objetivos, com revisão espaçada e pausas planejadas para sustentar foco e autonomia.</p>
+      <div class="mt-8 grid md:grid-cols-3 gap-6">
+        <% _cards.forEach(function (c) { const t = areaTheme(c.code); %>
+          <article class="card p-7 flex flex-col">
+            <span class="grid place-items-center w-12 h-12 rounded-xl <%= t.soft %> <%= t.text %>"><%- icon(t.icon, 'w-6 h-6') %></span>
+            <h3 class="mt-5 text-xl font-semibold"><%= t.label %></h3>
+            <p class="mt-1 text-xs font-medium <%= t.text %>"><%= t.subjects %></p>
+            <p class="mt-4 text-sm text-slate-600 leading-relaxed grow"><%= c.desc %></p>
+            <a href="/agendar?area=<%= t.code %>" class="mt-5 inline-flex items-center gap-2 min-h-[44px] text-xs font-semibold <%= t.text %>">Explorar disciplinas <%- icon('arrow-right', 'w-4 h-4') %></a>
+          </article>
+        <% }) %>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Professora e pesquisa -->
+  <section id="sobre" class="bg-nature-botanic text-white">
+    <div id="pesquisa" class="max-w-[1240px] mx-auto px-6 py-14 lg:py-16 grid lg:grid-cols-[0.9fr_1.1fr] gap-10 lg:gap-14 items-center">
+      <figure class="relative rounded-3xl overflow-hidden bg-white/10 aspect-[4/5] max-w-[460px] w-full">
+        <img src="/img/rhuanna-profile.png" alt="Ilustração da Prof.ª Rhuanna Luna" class="absolute inset-0 w-full h-full object-cover">
+      </figure>
+      <div>
+        <span class="badge bg-nature-amber text-boutique-text"><%- icon('graduation-cap', 'w-3.5 h-3.5') %>Professora • Pesquisadora UFPE</span>
+        <h2 class="mt-5 text-4xl lg:text-5xl font-semibold">Prof.ª Rhuanna Luna</h2>
+        <p class="mt-5 text-base lg:text-lg leading-relaxed text-white/90">Bióloga, educadora e pesquisadora em ecotoxicologia marinha na UFPE. Sua pesquisa investiga como contaminantes afetam organismos costeiros e tubarões — e transforma ciência real em aulas vivas, conectadas ao mundo.</p>
+        <dl class="mt-8 grid sm:grid-cols-3 gap-4">
+          <div class="rounded-xl bg-white/10 p-4"><dt class="sr-only">Experiência</dt><dd class="text-2xl font-semibold">4+</dd><dd class="text-xs text-white/85">anos na área</dd></div>
+          <div class="rounded-xl bg-white/10 p-4"><dt class="sr-only">Pesquisa</dt><dd class="text-2xl font-semibold">UFPE</dd><dd class="text-xs text-white/85">pesquisa ativa</dd></div>
+          <div class="rounded-xl bg-white/10 p-4"><dt class="sr-only">Atendimento</dt><dd class="text-2xl font-semibold">100%</dd><dd class="text-xs text-white/85">plano individual</dd></div>
+        </dl>
+        <p class="mt-4 rounded-xl bg-white/10 px-4 py-4 text-sm flex items-center gap-3"><span class="text-nature-amber"><%- icon('waves', 'w-5 h-5') %></span>Ecotoxicologia marinha • conservação de tubarões • divulgação científica</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Metodologia com IA -->
+  <section id="metodologia" class="bg-white">
+    <div class="max-w-[1240px] mx-auto px-6 py-14 lg:py-16">
+      <p class="text-xs font-semibold uppercase tracking-wide text-[#8A6A14]">Tecnologia com propósito</p>
+      <h2 class="mt-2 text-3xl lg:text-4xl font-semibold">Seu caderno fica mais inteligente sem estudar por você</h2>
+      <p class="mt-3 text-slate-600 max-w-3xl">O agente de IA do Habitat consulta os PDFs da aula, encontra trechos importantes e responde às suas dúvidas com fontes. Você revisa no seu ritmo, com mais autonomia.</p>
+      <div class="mt-8 grid lg:grid-cols-[1.35fr_1fr] gap-6">
+        <article class="card p-7">
+          <div class="flex items-center justify-between gap-3">
+            <span class="badge bg-[#E1EDE6] text-nature-botanic"><%- icon('sparkles', 'w-3.5 h-3.5') %>Resumo IA verificado</span>
+            <span class="text-xs text-slate-600">Leitura: 4 min</span>
+          </div>
+          <h3 class="mt-5 text-xl font-semibold">Ecossistemas marinhos e bioacumulação</h3>
+          <p class="mt-3 text-sm leading-relaxed">Quando um contaminante entra na cadeia alimentar, sua concentração pode aumentar a cada nível trófico. Tubarões, por serem predadores de topo, ajudam cientistas a observar esse processo.</p>
+          <ul class="mt-5 space-y-3 text-sm">
+            <li class="flex items-start gap-3"><span class="grid place-items-center w-6 h-6 rounded-full bg-[#E1EDE6] text-nature-botanic shrink-0"><%- icon('check', 'w-3.5 h-3.5') %></span>Bioacumulação acontece dentro de um organismo.</li>
+            <li class="flex items-start gap-3"><span class="grid place-items-center w-6 h-6 rounded-full bg-[#E1EDE6] text-nature-botanic shrink-0"><%- icon('check', 'w-3.5 h-3.5') %></span>Biomagnificação cresce ao longo da cadeia alimentar.</li>
+            <li class="flex items-start gap-3"><span class="grid place-items-center w-6 h-6 rounded-full bg-[#E1EDE6] text-nature-botanic shrink-0"><%- icon('check', 'w-3.5 h-3.5') %></span>Indicadores ambientais ajudam a orientar políticas públicas.</li>
+          </ul>
+        </article>
+
+        <article class="rounded-2xl bg-languages-navy text-white p-7" aria-labelledby="quiz-q">
+          <span class="badge bg-nature-amber text-boutique-text"><%- icon('circle-play', 'w-3.5 h-3.5') %>Quiz rápido • 1 de 3</span>
+          <h3 id="quiz-q" class="mt-5 text-xl font-medium leading-snug">Por que tubarões podem ser sentinelas da saúde do oceano?</h3>
+          <div class="mt-5 space-y-3" role="group" aria-labelledby="quiz-q">
+            <button type="button" data-quiz="0" class="w-full min-h-[44px] text-left rounded-xl border border-white/25 bg-white/5 px-4 py-3 text-sm flex gap-3"><b>A</b><span>Porque vivem apenas em águas limpas</span></button>
+            <button type="button" data-quiz="1" class="w-full min-h-[44px] text-left rounded-xl border border-white/25 bg-white/5 px-4 py-3 text-sm flex gap-3"><b>B</b><span>Porque acumulam sinais da cadeia alimentar</span></button>
+            <button type="button" data-quiz="0" class="w-full min-h-[44px] text-left rounded-xl border border-white/25 bg-white/5 px-4 py-3 text-sm flex gap-3"><b>C</b><span>Porque não interagem com contaminantes</span></button>
+          </div>
+          <p id="quizMsg" class="mt-4 text-xs text-white/85" aria-live="polite">Sem ranking, sem pressão. Refaça quando quiser.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Agendamento -->
+  <section id="agendar" class="bg-boutique-bg">
+    <div class="max-w-[1240px] mx-auto px-6 py-14 lg:py-16 grid lg:grid-cols-[1fr_1.1fr] gap-10 items-start">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-wide text-[#8A6A14]">Primeiro passo</p>
+        <h2 class="mt-2 text-3xl lg:text-4xl font-semibold">Agende uma aula avaliativa</h2>
+        <p class="mt-3 text-slate-600 max-w-md">Conte como você aprende melhor. A professora retorna em até 1 dia útil com uma proposta de encontro leve e objetivo.</p>
+        <p class="hint mt-6 bg-[#E1EDE6] text-boutique-text max-w-md"><%- icon('shield-check', 'w-5 h-5 shrink-0 text-nature-botanic') %>Suas observações de inclusão são confidenciais e usadas somente para adaptar o atendimento.</p>
+        <div class="mt-6 flex flex-wrap gap-3">
+          <a href="<%= site.whatsappUrl %>" target="_blank" rel="noopener" class="btn-green"><%- icon('message', 'w-5 h-5') %>WhatsApp</a>
+          <a href="mailto:<%= site.email %>" class="btn-outline"><%- icon('mail', 'w-5 h-5') %>E-mail</a>
+        </div>
+      </div>
+      <form action="/agendar" method="get" class="card p-6 lg:p-7 grid sm:grid-cols-2 gap-5 shadow-md">
+        <div><label for="f-name" class="label">Nome</label><input id="f-name" name="name" class="input" placeholder="Nome do estudante" autocomplete="name" required></div>
+        <div><label for="f-email" class="label">E-mail</label><input id="f-email" name="email" type="email" class="input" placeholder="voce@email.com" autocomplete="email" required></div>
+        <div><label for="f-phone" class="label">Telefone</label><input id="f-phone" name="phone" type="tel" class="input" placeholder="(81) 99999-9999" autocomplete="tel" required></div>
+        <div>
+          <label for="f-area" class="label">Disciplina</label>
+          <select id="f-area" name="area" class="input" required>
+            <option value="">Selecione uma opção</option>
+            <% subjectAreas.forEach(function (a) { %><option value="<%= a.code %>"><%= a.name %></option><% }) %>
+          </select>
+        </div>
+        <div class="sm:col-span-2"><label for="f-notes" class="label">Observações de Inclusão</label><textarea id="f-notes" name="notes" rows="3" maxlength="1500" class="input" placeholder="Rotina, interesses, sensibilidades ou adaptações importantes…"></textarea></div>
+        <div class="sm:col-span-2">
+          <button type="submit" class="btn-amber w-full"><%- icon('arrow-right', 'w-5 h-5') %>Agendar Aula Avaliativa</button>
+          <p class="mt-3 text-center text-xs text-slate-600">Você escolhe o dia e o horário no próximo passo e revisa tudo antes de enviar.</p>
+        </div>
+      </form>
+    </div>
+  </section>
+</main>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var msg = document.getElementById('quizMsg');
+  document.querySelectorAll('[data-quiz]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var ok = b.dataset.quiz === '1';
+      document.querySelectorAll('[data-quiz]').forEach(function (x) { x.classList.remove('bg-[#F6EFD9]', 'text-boutique-text', 'border-nature-amber'); x.classList.add('bg-white/5'); });
+      b.classList.remove('bg-white/5');
+      if (ok) b.classList.add('bg-[#F6EFD9]', 'text-boutique-text', 'border-nature-amber');
+      msg.textContent = ok
+        ? 'Isso mesmo: predadores de topo acumulam sinais de toda a cadeia alimentar.'
+        : 'Quase! Pense em quem fica no topo da cadeia. Você pode tentar de novo.';
+    });
+  });
+});
+</script>
+<%- include('../layouts/footer') %>

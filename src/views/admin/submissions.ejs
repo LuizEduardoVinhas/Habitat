@@ -1,0 +1,64 @@
+<%- include('../layouts/header', { title: 'Envios dos alunos' }) %>
+<div class="lg:flex">
+  <%- include('../layouts/sidebar', { active: 'submissions' }) %>
+  <div class="flex-1 min-w-0">
+    <%- include('../layouts/topbar', { heading: 'Envios dos alunos', sub: 'Analise provas, atividades e materiais enviados pelos estudantes' }) %>
+    <main id="conteudo" class="p-6 lg:p-8 space-y-4">
+      <div id="reviewMsg" role="alert" hidden></div>
+      <% if (submissions.length) { %>
+        <% submissions.forEach(function (item) { const student = item.student; const name = student?.profile?.full_name || student?.email || 'Aluno'; const reviewed = item.status === 'REVIEWED'; %>
+          <article class="card" aria-labelledby="submission-<%= item.id %>">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 id="submission-<%= item.id %>" class="text-lg font-semibold"><%= item.title %></h2>
+                <p class="mt-1 text-xs text-slate-600"><%= name %> • Enviado em <%= fmtDayYear(item.createdAt) %></p>
+              </div>
+              <span class="badge <%= reviewed ? 'bg-[#E1EDE6] text-nature-botanic' : 'bg-[#F6EFD9] text-[#7A5C10]' %>"><%= reviewed ? 'Analisado' : 'Pendente' %></span>
+            </div>
+            <% if (item.description) { %><p class="mt-4 text-sm whitespace-pre-line"><%= item.description %></p><% } %>
+            <div class="mt-4 flex flex-wrap items-center gap-3">
+              <a class="btn-outline" href="/submissions/<%= item.id %>/file"><%- icon('file-text', 'w-4 h-4') %>Abrir arquivo (<%= item.original_filename %>)</a>
+              <span class="text-xs text-slate-600">Você pode enviar uma orientação ou sugestão de revisão para o aluno.</span>
+            </div>
+            <form class="reviewForm mt-5 border-t border-slate-100 pt-5 space-y-3" data-id="<%= item.id %>">
+              <label class="label" for="response-<%= item.id %>">Resposta para <%= name %></label>
+              <textarea id="response-<%= item.id %>" name="teacher_response" class="input" rows="3" maxlength="4000" required placeholder="Escreva sua análise, orientação ou sugestão de estudo."><%= item.teacher_response || '' %></textarea>
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <% if (item.reviewed_at) { %><p class="text-xs text-slate-600">Última resposta em <%= fmtDayYear(item.reviewed_at) %></p><% } else { %><span></span><% } %>
+                <button type="submit" class="btn-green"><%- icon('send', 'w-4 h-4') %><%= reviewed ? 'Atualizar resposta' : 'Enviar análise ao aluno' %></button>
+              </div>
+            </form>
+          </article>
+        <% }) %>
+      <% } else { %>
+        <div class="card text-center">
+          <h2 class="text-lg font-semibold">Nenhum material recebido ainda</h2>
+          <p class="mt-2 text-sm text-slate-600">Quando os alunos enviarem provas ou atividades, você poderá analisar e responder nesta tela.</p>
+        </div>
+      <% } %>
+    </main>
+  </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('.reviewForm').forEach(function (form) {
+    form.addEventListener('submit', async function (event) {
+      event.preventDefault();
+      ST.alert(document.getElementById('reviewMsg'), '');
+      var button = form.querySelector('button[type="submit"]');
+      button.disabled = true;
+      try {
+        await ST.api('/admin/submissions/' + form.dataset.id + '/review', {
+          method: 'PATCH',
+          json: { teacher_response: form.teacher_response.value }
+        });
+        location.reload();
+      } catch (error) {
+        ST.alert(document.getElementById('reviewMsg'), error.message);
+        button.disabled = false;
+      }
+    });
+  });
+});
+</script>
+<%- include('../layouts/end') %>

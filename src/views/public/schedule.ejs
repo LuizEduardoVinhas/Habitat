@@ -1,0 +1,259 @@
+<%- include('../layouts/header', { title: 'Solicitar aula avaliativa' }) %>
+<header class="bg-white border-b border-slate-200">
+  <div class="max-w-[1240px] mx-auto px-6 min-h-[76px] flex items-center justify-between gap-4">
+    <%- include('../layouts/logo') %>
+    <a href="<%= site.whatsappUrl %>" target="_blank" rel="noopener" class="inline-flex items-center gap-2 min-h-[44px] text-sm text-slate-700"><%- icon('help', 'w-5 h-5 text-nature-botanic') %><span class="hidden sm:inline">Precisa de ajuda? <%= site.phone %></span><span class="sm:hidden">Ajuda</span></a>
+  </div>
+</header>
+
+<main id="conteudo" class="max-w-[1240px] mx-auto px-6 py-10">
+  <span class="badge bg-[#F6EFD9] text-[#7A5C10]"><%- icon('sparkles', 'w-3.5 h-3.5') %>Aula avaliativa • 50 minutos</span>
+  <div class="mt-4 flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <h1 class="text-4xl lg:text-5xl font-light leading-tight max-w-2xl">Vamos encontrar o melhor ponto de partida</h1>
+      <p class="mt-3 text-slate-600">Escolha com calma. Você poderá revisar tudo antes de enviar.</p>
+    </div>
+    <p id="stepText" class="text-sm font-semibold text-nature-botanic" aria-live="polite">Etapa 1 de 3 • Área e disciplina</p>
+  </div>
+
+  <ol class="mt-6 grid grid-cols-3 gap-4" aria-label="Progresso">
+    <li><div id="bar1" class="h-1 rounded-full bg-slate-200"></div><p class="mt-2 text-xs text-slate-600">1 Área e disciplina</p></li>
+    <li><div id="bar2" class="h-1 rounded-full bg-slate-200"></div><p class="mt-2 text-xs text-slate-600">2 Data e horário</p></li>
+    <li><div id="bar3" class="h-1 rounded-full bg-slate-200"></div><p class="mt-2 text-xs text-slate-600">3 Perfil de aprendizagem</p></li>
+  </ol>
+
+  <div class="mt-8 grid lg:grid-cols-[1fr_350px] gap-6 items-start">
+    <div id="leftCol" class="space-y-6 min-w-0">
+
+      <!-- 1. Área -->
+      <section class="card" aria-labelledby="s1">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div><h2 id="s1" class="text-xl font-semibold">1. Área e disciplina</h2><p class="text-xs text-slate-600 mt-1">Uma escolha por solicitação</p></div>
+          <span id="areaPill" hidden class="badge bg-[#E1EDE6] text-nature-botanic"><%- icon('check', 'w-3.5 h-3.5') %><span></span></span>
+        </div>
+        <div role="radiogroup" aria-label="Área do conhecimento" class="mt-5 grid md:grid-cols-3 gap-4">
+          <% subjectAreas.forEach(function (a) { const t = areaTheme(a.code); %>
+            <button type="button" role="radio" aria-checked="false" data-area-id="<%= a.id || '' %>" data-area-name="<%= a.name %>" data-sel="<%= t.sel %>"
+              class="area-opt text-left min-h-[120px] rounded-xl border-2 border-slate-200 bg-white p-4 flex flex-col gap-2">
+              <span class="<%= t.text %>"><%- icon(t.icon, 'w-6 h-6') %></span>
+              <span class="text-base font-medium"><%= a.name %></span>
+              <span class="text-xs text-slate-600"><%= t.subjects %></span>
+            </button>
+          <% }) %>
+        </div>
+      </section>
+
+      <!-- 2. Data e horário -->
+      <section class="card" aria-labelledby="s2">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div><h2 id="s2" class="text-xl font-semibold">2. Data e horário</h2><p id="monthLabel" class="text-xs text-slate-600 mt-1" aria-live="polite"></p></div>
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="badge bg-[#E1EDE6] text-nature-botanic">Disponível</span>
+            <span class="badge bg-[#F6EAE4] text-humanities-terracotta"><%- icon('flask', 'w-3.5 h-3.5') %>Pesquisa UFPE</span>
+            <button type="button" id="prevM" class="btn-icon" aria-label="Mês anterior"><%- icon('chevron-left', 'w-5 h-5') %></button>
+            <button type="button" id="nextM" class="btn-icon" aria-label="Próximo mês"><%- icon('chevron-right', 'w-5 h-5') %></button>
+          </div>
+        </div>
+        <div class="mt-5 grid lg:grid-cols-[1fr_260px] gap-8">
+          <div class="overflow-x-auto">
+            <div class="min-w-[330px]">
+              <div class="grid grid-cols-7 gap-2 text-center text-[11px] font-semibold uppercase text-slate-600" aria-hidden="true">
+                <span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span><span>Dom</span>
+              </div>
+              <div id="calendar" class="mt-2 grid grid-cols-7 gap-2"></div>
+            </div>
+          </div>
+          <div>
+            <p id="slotsTitle" class="text-sm text-slate-700" aria-live="polite">Escolha um dia no calendário</p>
+            <div id="slots" class="mt-3 grid gap-2.5"></div>
+          </div>
+        </div>
+        <p class="hint mt-6 bg-[#F6EAE4] text-boutique-text"><%- icon('lightbulb', 'w-4 h-4 mt-0.5 shrink-0 text-humanities-terracotta') %>Dias em terracota estão bloqueados para a pesquisa de Ecotoxicologia na UFPE.</p>
+      </section>
+
+      <!-- 3. Perfil -->
+      <section class="card" aria-labelledby="s3">
+        <h2 id="s3" class="text-xl font-semibold">3. Perfil de aprendizagem</h2>
+        <div class="mt-4 flex flex-wrap gap-2.5" role="group" aria-label="Perfil de aprendizagem (pode marcar mais de um)">
+          <% ['TDAH', 'Autismo', 'Altas Habilidades', 'Ansiedade acadêmica', 'Sem diagnóstico'].forEach(function (t) { %>
+            <button type="button" class="chip" data-tag="<%= t %>" aria-pressed="false"><%= t %></button>
+          <% }) %>
+        </div>
+        <div class="mt-6 grid md:grid-cols-2 gap-5">
+          <div><label for="studentName" class="label">Nome do estudante</label><input id="studentName" class="input" autocomplete="name" maxlength="120" value="<%= boot.prefill.studentName %>" <%= boot.prefill.registeredStudent ? 'readonly' : '' %>></div>
+          <div><label for="guardian" class="label">Responsável</label><input id="guardian" class="input" placeholder="Nome • telefone ou e-mail" maxlength="160" value="<%= boot.prefill.contact %>" <%= boot.prefill.registeredStudent ? 'readonly' : '' %>><% if (boot.prefill.registeredStudent) { %><p class="mt-1 text-xs text-slate-600">Dados vinculados ao cadastro do aluno.</p><% } %></div>
+          <div class="md:col-span-2"><label for="obs" class="label">Observações dos pais ou responsáveis</label><textarea id="obs" rows="4" maxlength="1500" class="input" placeholder="O que ajuda o estudante a se concentrar? Há sensibilidades ou rotinas importantes?"></textarea></div>
+        </div>
+      </section>
+    </div>
+
+    <aside class="space-y-6 lg:sticky lg:top-6" aria-label="Resumo">
+      <section id="summary" class="card" aria-labelledby="sum-t">
+        <h2 id="sum-t" class="text-lg font-semibold">Resumo da solicitação</h2>
+        <dl class="mt-4 space-y-3 text-sm">
+          <div class="flex justify-between gap-4"><dt class="text-slate-600">Área</dt><dd id="sumArea" class="font-semibold text-right">—</dd></div>
+          <div class="flex justify-between gap-4"><dt class="text-slate-600">Data</dt><dd id="sumDate" class="font-semibold text-right">—</dd></div>
+          <div class="flex justify-between gap-4"><dt class="text-slate-600">Horário</dt><dd id="sumTime" class="font-semibold text-right">—</dd></div>
+        </dl>
+        <div id="formError" role="alert" hidden class="mt-4"></div>
+        <button type="button" id="submitBtn" class="btn-amber w-full mt-5"><%- icon('send', 'w-5 h-5') %><span>Enviar solicitação</span></button>
+        <p class="mt-4 text-center text-xs text-slate-600">Ainda não é uma cobrança. A professora confirmará por WhatsApp.</p>
+      </section>
+
+      <section id="success" hidden class="rounded-2xl bg-nature-botanic text-white p-6" role="status" tabindex="-1">
+        <span class="grid place-items-center w-12 h-12 rounded-full bg-white text-nature-botanic"><%- icon('check', 'w-6 h-6') %></span>
+        <h2 class="mt-5 text-2xl font-semibold leading-tight">Solicitação Enviada com Sucesso</h2>
+        <p class="mt-3 text-sm text-white/90">Recebemos seu pedido para <span id="okArea"></span>. A Prof.ª Rhuanna responderá em até 1 dia útil.</p>
+        <p id="notificationStatus" class="mt-3 text-sm text-white/90" aria-live="polite"></p>
+        <p class="mt-4 rounded-lg bg-white/10 px-4 py-3 text-sm flex justify-between gap-3"><span class="text-white/80 text-xs uppercase tracking-wide self-center">Protocolo</span><b id="okProto"></b></p>
+        <a href="/" class="btn mt-4 w-full bg-white text-boutique-text hover:bg-slate-100">Voltar para o início</a>
+      </section>
+    </aside>
+  </div>
+</main>
+
+<script id="boot" type="application/json"><%- JSON.stringify(boot).replace(/</g, '\\u003c') %></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var boot = JSON.parse(document.getElementById('boot').textContent);
+  var SLOTS = boot.slots, DUR = 50 * 60000;
+  var busy = boot.busy.map(function (b) { return { s: new Date(b.start).getTime(), e: new Date(b.end).getTime(), type: b.type }; });
+  var MONTHS = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  var $ = function (id) { return document.getElementById(id); };
+  var todayKey = ST.dayKey(new Date());
+  var state = { areaId: null, areaName: '', date: null, slot: null, y: +todayKey.slice(0, 4), m: +todayKey.slice(5, 7) - 1, tags: [] };
+  var pad = function (n) { return String(n).padStart(2, '0'); };
+
+  /* ---- 1. área ---- */
+  var opts = Array.prototype.slice.call(document.querySelectorAll('.area-opt'));
+  function selectArea(btn) {
+    opts.forEach(function (o) {
+      var on = o === btn;
+      o.setAttribute('aria-checked', on ? 'true' : 'false');
+      o.dataset.sel.split(' ').forEach(function (c) { o.classList.toggle(c, on); });
+      o.classList.toggle('border-slate-200', !on);
+    });
+    state.areaId = btn.dataset.areaId; state.areaName = btn.dataset.areaName;
+    $('areaPill').hidden = false; $('areaPill').querySelector('span').textContent = state.areaName + ' selecionada';
+    update();
+  }
+  opts.forEach(function (o) { o.addEventListener('click', function () { selectArea(o); }); });
+  if (boot.prefill.areaId) { var pre = opts.filter(function (o) { return o.dataset.areaId === boot.prefill.areaId; })[0]; if (pre) selectArea(pre); }
+
+  /* ---- 2. calendário ---- */
+  function slotStatus(key, hm) {
+    var s = ST.at(key, hm).getTime(), e = s + DUR;
+    if (s <= Date.now()) return 'past';
+    var r = 'ok';
+    for (var i = 0; i < busy.length; i++) {
+      if (busy[i].s < e && busy[i].e > s) { if (busy[i].type === 'block') return 'block'; r = 'busy'; }
+    }
+    return r;
+  }
+  function renderCalendar() {
+    var cal = $('calendar'); cal.innerHTML = '';
+    $('monthLabel').textContent = ST.cap(MONTHS[state.m]) + ' ' + state.y;
+    var offset = (new Date(Date.UTC(state.y, state.m, 1)).getUTCDay() + 6) % 7;
+    var days = new Date(Date.UTC(state.y, state.m + 1, 0)).getUTCDate();
+    for (var i = 0; i < offset; i++) cal.appendChild(document.createElement('span'));
+    for (var d = 1; d <= days; d++) {
+      var key = state.y + '-' + pad(state.m + 1) + '-' + pad(d);
+      var st = SLOTS.map(function (h) { return slotStatus(key, h); });
+      var hasOk = st.indexOf('ok') >= 0, blocked = !hasOk && st.indexOf('block') >= 0;
+      var b = document.createElement('button');
+      b.type = 'button'; b.textContent = d;
+      b.className = 'min-h-[44px] rounded-lg border text-sm font-medium ';
+      var label = d + ' de ' + MONTHS[state.m];
+      if (state.date === key) { b.className += 'bg-nature-botanic border-nature-botanic text-white'; b.setAttribute('aria-pressed', 'true'); }
+      else if (hasOk) { b.className += 'bg-slate-50 border-slate-200 hover:border-nature-botanic'; b.setAttribute('aria-pressed', 'false'); }
+      else if (blocked) { b.className += 'bg-[#F6EAE4] border-[#F6EAE4] text-humanities-terracotta'; b.disabled = true; label += ', bloqueado para pesquisa na UFPE'; }
+      else { b.className += 'bg-slate-50 border-slate-100 text-slate-400'; b.disabled = true; label += ', indisponível'; }
+      if (key === todayKey) label += ', hoje';
+      b.setAttribute('aria-label', label);
+      (function (k) { b.addEventListener('click', function () { state.date = k; state.slot = null; renderCalendar(); renderSlots(); update(); }); })(key);
+      cal.appendChild(b);
+    }
+  }
+  function renderSlots() {
+    var box = $('slots'); box.innerHTML = '';
+    if (!state.date) { $('slotsTitle').textContent = 'Escolha um dia no calendário'; return; }
+    $('slotsTitle').textContent = ST.cap(ST.fmt(ST.at(state.date, '12:00'), { weekday: 'long', day: 'numeric', month: 'long' }));
+    SLOTS.forEach(function (h) {
+      var s = slotStatus(state.date, h), b = document.createElement('button');
+      b.type = 'button'; b.textContent = h;
+      b.className = 'min-h-[44px] rounded-lg border text-sm ';
+      if (state.slot === h) { b.className += 'bg-[#F6EFD9] border-nature-amber font-semibold'; b.setAttribute('aria-pressed', 'true'); }
+      else if (s === 'ok') { b.className += 'bg-white border-slate-300 hover:border-nature-botanic'; b.setAttribute('aria-pressed', 'false'); }
+      else { b.className += 'bg-slate-50 border-slate-100 text-slate-400 line-through'; b.disabled = true; b.setAttribute('aria-label', h + ', indisponível'); }
+      b.addEventListener('click', function () { state.slot = h; renderSlots(); update(); });
+      box.appendChild(b);
+    });
+  }
+  $('prevM').addEventListener('click', function () { state.m--; if (state.m < 0) { state.m = 11; state.y--; } renderCalendar(); });
+  $('nextM').addEventListener('click', function () { state.m++; if (state.m > 11) { state.m = 0; state.y++; } renderCalendar(); });
+
+  /* ---- 3. perfil ---- */
+  document.querySelectorAll('[data-tag]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var tag = b.dataset.tag, on = b.getAttribute('aria-pressed') !== 'true';
+      if (on && tag === 'Sem diagnóstico') document.querySelectorAll('[data-tag]').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
+      if (on && tag !== 'Sem diagnóstico') document.querySelector('[data-tag="Sem diagnóstico"]').setAttribute('aria-pressed', 'false');
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  });
+  $('studentName').value = boot.prefill.studentName || '';
+  $('guardian').value = boot.prefill.contact || '';
+  $('obs').value = boot.prefill.observations || '';
+  ['studentName', 'guardian'].forEach(function (id) { $(id).addEventListener('input', update); });
+
+  /* ---- resumo e progresso ---- */
+  function update() {
+    $('sumArea').textContent = state.areaName || '—';
+    $('sumDate').textContent = state.date ? ST.fmt(ST.at(state.date, '12:00'), { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+    $('sumTime').textContent = state.slot ? state.slot + ' — ' + ST.hm(new Date(ST.at(state.date, state.slot).getTime() + DUR)) : '—';
+    var d1 = !!state.areaId, d2 = !!(state.date && state.slot), d3 = $('studentName').value.trim().length > 1 && $('guardian').value.trim().length > 4;
+    [d1, d2, d3].forEach(function (d, i) { var bar = $('bar' + (i + 1)); bar.classList.toggle('bg-nature-botanic', d); bar.classList.toggle('bg-slate-200', !d); });
+    var step = !d1 ? 1 : !d2 ? 2 : 3;
+    $('stepText').textContent = 'Etapa ' + step + ' de 3 • ' + ['Área e disciplina', 'Data e horário', 'Revisão'][step - 1];
+  }
+
+  /* ---- envio ---- */
+  $('submitBtn').addEventListener('click', async function () {
+    var err = $('formError'), btn = this;
+    var missing = [];
+    if (!state.areaId) missing.push('a área do conhecimento');
+    if (!state.date || !state.slot) missing.push('o dia e o horário');
+    if ($('studentName').value.trim().length < 2) missing.push('o nome do estudante');
+    if ($('guardian').value.trim().length < 5) missing.push('o contato do responsável');
+    if (missing.length) { ST.alert(err, 'Falta escolher ou preencher: ' + missing.join(', ') + '.'); return; }
+    ST.alert(err, '');
+    btn.disabled = true; btn.querySelector('span').textContent = 'Enviando…';
+    try {
+      var tags = Array.prototype.slice.call(document.querySelectorAll('[data-tag][aria-pressed="true"]')).map(function (b) { return b.dataset.tag; });
+      var data = await ST.api('/appointments', { method: 'POST', json: {
+        subject_area_id: state.areaId,
+        start_time: ST.at(state.date, state.slot).toISOString(),
+        student_name: $('studentName').value, guardian_contact: $('guardian').value,
+        profile: tags, observations: $('obs').value,
+      } });
+      $('okArea').textContent = state.areaName; $('okProto').textContent = data.protocol;
+      var notificationStatus = $('notificationStatus');
+      if (data.emailNotification === 'sent') {
+        notificationStatus.textContent = 'A professora também foi avisada por e-mail.';
+      } else if (data.emailNotification === 'not_configured') {
+        notificationStatus.textContent = 'Seu pedido foi salvo. O aviso automático por e-mail ainda não está configurado.';
+      } else {
+        notificationStatus.textContent = 'Seu pedido foi salvo, mas não foi possível enviar o aviso automático por e-mail. A professora precisará verificar o painel.';
+      }
+      $('summary').hidden = true; $('success').hidden = false; $('success').focus();
+      $('leftCol').inert = true; $('leftCol').classList.add('opacity-60');
+    } catch (ex) {
+      ST.alert(err, ex.message);
+      btn.disabled = false; btn.querySelector('span').textContent = 'Enviar solicitação';
+    }
+  });
+
+  renderCalendar(); renderSlots(); update();
+});
+</script>
+<%- include('../layouts/end') %>
